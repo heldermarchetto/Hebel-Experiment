@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Experiment: Das Hebelgesetz</title>
+<style>
+:root{--bg:#f4f6fb;--ink:#1d2433;--muted:#5b6475;--accent:#f2b705;--accent2:#2563eb;--ok:#16a34a;--bad:#dc2626;--line:#dde3ee}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:18px;line-height:1.5}
+.top{position:sticky;top:0;z-index:50;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+header{background:#1d2433;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:8px 18px;gap:10px;flex-wrap:wrap}
+header h1{font-size:20px;margin:0}
+.hright{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{border-radius:999px;padding:4px 12px;font-weight:700;font-size:16px;white-space:nowrap}
+.chip.prog{background:var(--accent);color:#1d2433}.chip.wr{background:#fee2e2;color:#991b1b}
+.hbtn{background:#334155;color:#fff;border:none;border-radius:8px;padding:6px 10px;font-size:15px;cursor:pointer}
+nav{display:flex;gap:6px;flex-wrap:wrap;padding:8px 18px;background:#fff;border-bottom:1px solid var(--line)}
+.tab{border:1px solid var(--line);background:#fff;border-radius:10px;padding:5px 11px;font-size:15.5px;cursor:pointer;color:var(--ink)}
+.tab.active{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.tab.done::after{content:" ✓";color:var(--ok);font-weight:800}
+.tab.active.done::after{color:#bbf7d0}
+main{max-width:1000px;margin:0 auto;padding:18px}
+.page{display:none}.page.active{display:block}
+h2{margin:6px 0 14px;font-size:27px}h3{margin:4px 0 10px;font-size:21px}h4{margin:0 0 6px;font-size:19px}
+.card{background:#fff;border-radius:16px;padding:18px 22px;margin:0 0 18px;border:1px solid var(--line);box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.rule{background:#fff8dc;border:3px solid var(--accent);border-radius:14px;padding:12px 16px;font-size:20px;text-align:center;font-weight:700;margin:10px 0}
+.rule .sub{font-size:16px;font-weight:500}
+.words{background:#eef4ff;border-radius:12px;padding:10px 14px;font-size:16px;margin-top:10px}
+.words b{color:#1e40af}.en{color:var(--muted);font-style:italic}
+.note{background:#f0fdf4;border-left:5px solid var(--ok);padding:10px 14px;border-radius:8px;margin:10px 0}
+.warn{background:#fff7ed;border-left:5px solid #f97316;padding:10px 14px;border-radius:8px;margin:10px 0}
+.steps{background:#f6f8fc;border-radius:12px;padding:10px 14px 10px 34px;margin:8px 0}
+.q{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:12px 0;background:#fcfdff}
+.qhead{font-weight:600;margin-bottom:8px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{border:2px solid var(--line);background:#fff;border-radius:10px;padding:8px 14px;font-size:17px;cursor:pointer;color:var(--ink);text-align:left}
+.opt:hover:not(:disabled){border-color:var(--accent2)}
+.opt.right{background:#dcfce7;border-color:var(--ok)}.opt.wrong{background:#fee2e2;border-color:var(--bad)}
+.opt.sel{background:#dbeafe;border-color:var(--accent2)}
+.opt:disabled{cursor:default;color:var(--ink)}
+.fb{margin-top:6px;font-size:16.5px}.fb.ok{color:#15803d}.fb.no{color:#b91c1c}
+input[type=text],input.num,select,textarea{font-size:18px;padding:7px 10px;border:2px solid var(--line);border-radius:10px;font-family:inherit;color:var(--ink);background:#fff}
+input.num{width:120px}
+input:disabled{background:#f1f3f7;color:#6b7280}
+textarea{width:100%;min-height:110px}
+.btn{background:var(--accent2);color:#fff;border:none;border-radius:10px;padding:9px 16px;font-size:17px;cursor:pointer;font-weight:600}
+.btn.sec{background:#e5e9f2;color:var(--ink)}.btn.yellow{background:var(--accent);color:#1d2433}.btn.green{background:var(--ok)}
+.btn:disabled{opacity:.45;cursor:default}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:6px 0}
+svg{max-width:100%;height:auto;display:block}
+.exp{border:2px solid var(--line);border-radius:14px;padding:12px 16px;margin:14px 0;background:#fff}
+.exp.complete{border-color:#86efac}
+.lbl{display:inline-block;min-width:118px;font-weight:600}
+.res{margin-top:6px;padding:6px 10px;border-radius:8px;font-weight:600;font-size:16.5px}
+.res.good{background:#dcfce7;color:#166534}.res.mid{background:#ffedd5;color:#9a3412}.res.bad{background:#fee2e2;color:#991b1b}
+table{border-collapse:collapse;width:100%;font-size:16px;margin-top:8px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:center}th{background:#f1f4fa}
+td.good{background:#dcfce7}td.mid{background:#ffedd5}td.bad{background:#fee2e2}
+.hidden{display:none!important}
+.next{display:flex;justify-content:space-between;margin-top:8px}
+.starter{display:inline-block;background:#eef4ff;border:1px solid #c7d7fe;border-radius:8px;padding:3px 9px;margin:3px;font-size:15px;cursor:pointer}
+.check{display:flex;gap:10px;align-items:flex-start;padding:7px 10px;border:2px solid var(--line);border-radius:10px;margin:6px 0;cursor:pointer;background:#fff}
+.check input{width:22px;height:22px;margin-top:3px}
+.check.bad{border-color:var(--bad);background:#fee2e2}.check.okc{border-color:var(--ok)}
+.cloze{font-size:19px;line-height:2.4}
+.cloze select{font-size:17px;padding:4px 6px}
+.cloze select.bad{border-color:var(--bad);background:#fee2e2}.cloze select.okc{border-color:var(--ok);background:#dcfce7}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1d2433;color:#fff;padding:12px 20px;border-radius:12px;z-index:200;font-size:17px;max-width:90%;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.missing li{color:#9a3412}
+.photo{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:6px 0}
+.photo img{max-width:220px;max-height:160px;border-radius:8px;border:2px solid #86efac;cursor:zoom-in}
+.photo .pt{font-size:14px;color:var(--muted)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;display:flex;align-items:center;justify-content:center;cursor:zoom-out}
+.overlay img{max-width:95vw;max-height:92vh;border-radius:8px}
+</style>
+</head>
+<body>
+<div class="top">
+<header>
+  <h1>🔧 Experiment: Das Hebelgesetz</h1>
+  <div class="hright">
+    <span class="chip prog" id="hProg">0 %</span>
+    <span class="chip wr" id="hWrong">❌ 0</span>
+    <button class="hbtn" id="hSave">💾 Speichern</button>
+    <button class="hbtn" id="hLoad">📂 Laden</button>
+  </div>
+</header>
+<nav id="nav"></nav>
+</div>
+
+<main>
+<!-- START -->
+<section class="page" id="p0">
+  <h2>Experiment: Wir prüfen das Hebelgesetz 👋</h2>
+  <div class="card">
+    <p>Am Computer hast du das <b>Hebelgesetz</b> gelernt. Heute prüfst du es mit einem <b>echten Hebel</b>.</p>
+    <div class="rule">Hebelgesetz: F₁ · r₁ = F₂ · r₂<div class="sub">Drehmoment links = Drehmoment rechts</div></div>
+    <p>So arbeitest du bei jedem Versuch:</p>
+    <ol class="steps">
+      <li><b>Vorhersage:</b> Erst rechnen. Was erwartest du?</li>
+      <li><b>Experiment:</b> Dann messen und ein <b>Foto</b> machen.</li>
+      <li><b>Vergleich:</b> Passt die Messung zur Vorhersage? Warum (nicht)?</li>
+    </ol>
+    <p>Am Ende erstellst du ein <b>PDF-Protokoll</b> und schickst es deinem Lehrer.</p>
+    <div class="warn">💾 <b>Wichtig:</b> Klicke oben auf <b>„Speichern“</b>, wenn du eine Pause machst. Dann bekommst du eine Datei. Mit <b>„Laden“</b> kannst du später weiterarbeiten – auch auf einem anderen Gerät.</div>
+  </div>
+  <div class="card">
+    <h3>Wer seid ihr?</h3>
+    <div class="row"><span class="lbl">Name:</span><input type="text" id="inName" style="width:260px" placeholder="Vorname Nachname"></div>
+    <div class="row"><span class="lbl">Klasse:</span><input type="text" id="inKlasse" style="width:100px" placeholder="8b"></div>
+    <div class="row"><span class="lbl">Partner:</span><input type="text" id="inPartner" style="width:260px" placeholder="Name(n)"></div>
+    <div class="row"><span class="lbl">Datum:</span><input type="text" id="inDatum" style="width:160px"></div>
+  </div>
+  <div class="next"><span></span><button class="btn" data-go="p1">Los geht's! →</button></div>
+</section>
+
+<!-- 1 VORBEREITUNG -->
+<section class="page" id="p1">
+  <h2>1 Vorbereitung</h2>
+  <div class="card">
+    <h3>Material</h3>
+    <ul><li>Hebel mit Stativ (Drehpunkt in der Mitte)</li><li>Massestücke mit Haken</li><li>Kraftmesser (Federkraftmesser)</li><li>Lineal</li></ul>
+    <div class="words"><b>Wörter:</b> <b>das Massestück</b> <span class="en">(slotted mass)</span> · <b>der Kraftmesser</b> <span class="en">(spring scale)</span> · <b>das Loch</b> <span class="en">(hole)</span> · <b>der Lochabstand</b> <span class="en">(distance between holes)</span> · <b>waagerecht</b> <span class="en">(horizontal)</span> · <b>die Vorhersage</b> <span class="en">(prediction)</span> · <b>die Messung</b> <span class="en">(measurement)</span> · <b>die Abweichung</b> <span class="en">(deviation)</span> · <b>ablesen</b> <span class="en">(to read a value)</span></div>
+  </div>
+  <div class="card">
+    <h3>a) Ein Massestück</h3>
+    <p>Schau auf ein Massestück. Wie groß ist seine Masse? (Sie steht oft darauf.)</p>
+    <div class="row"><span class="lbl">Masse m =</span><input class="num" id="pm" inputmode="decimal"><b>g</b></div>
+    <p>Berechne die <b>Gewichtskraft F</b> von einem Massestück. Rechne mit g = 10 N/kg.<br><small>Tipp: 100 g → 1 N. Also: F = m (in g) : 100</small></p>
+    <div class="row"><span class="lbl">F =</span><input class="num" id="pF" inputmode="decimal"><b>N</b><button class="btn" id="pFchk">Prüfen</button></div>
+    <div class="fb" id="pFfb"></div>
+  </div>
+  <div class="card">
+    <h3>b) Der Lochabstand</h3>
+    <p>Miss mit dem Lineal den Abstand zwischen zwei Löchern am Hebel (von Mitte zu Mitte).<br>
+    <small>Tipp: Miss vom Drehpunkt bis Loch 4 und teile durch 4. Das ist genauer.</small></p>
+    <div class="row"><span class="lbl">Lochabstand d =</span><input class="num" id="pd" inputmode="decimal"><b>cm</b></div>
+    <p>Dann gilt: Loch Nr. 3 hat den Abstand r = 3 · d vom Drehpunkt.</p>
+  </div>
+  <div class="card">
+    <h3>c) Ist der Hebel waagerecht?</h3>
+    <p>Häng noch <b>keine</b> Gewichte an. Ist der Hebel waagerecht?</p>
+    <div class="opts" id="levelOpts">
+      <button class="opt" data-v="ja">Ja, er ist waagerecht.</button>
+      <button class="opt" data-v="nein">Nein. Wir haben ihn eingestellt (Schraube / Mutter am Hebel).</button>
+    </div>
+    <div class="note">Der Hebel muss am Anfang <b>waagerecht</b> sein. Sonst stimmen die Messungen nicht.</div>
+  </div>
+  <div class="msg" id="prepLock"></div>
+  <div class="next"><button class="btn sec" data-go="p0">← Zurück</button><button class="btn" data-go="p2">Weiter →</button></div>
+</section>
+
+<!-- 2 THEORIE -->
+<section class="page" id="p2">
+  <h2>2 Theorie: Was erwarte ich?</h2>
+  <div class="card" id="thBox"></div>
+  <div class="next"><button class="btn sec" data-go="p1">← Zurück</button><button class="btn" data-go="p3">Weiter →</button></div>
+</section>
+
+<!-- 3,4,5 Versuche A–C -->
+<section class="page" id="p3"><div id="gA"></div><div class="next"><button class="btn sec" data-go="p2">← Zurück</button><button class="btn" data-go="p4">Weiter →</button></div></section>
+<section class="page" id="p4"><div id="gB"></div><div class="next"><button class="btn sec" data-go="p3">← Zurück</button><button class="btn" data-go="p5">Weiter →</button></div></section>
+<section class="page" id="p5"><div id="gC"></div><div class="next"><button class="btn sec" data-go="p4">← Zurück</button><button class="btn" data-go="p6">Weiter →</button></div></section>
+
+<!-- 6 Versuch D -->
+<section class="page" id="p6">
+  <h2>Versuch D: Schräg ziehen</h2>
+  <div class="card">
+    <p>Hänge <b>2 Massestücke links bei Loch 4</b>. Hänge den <b>Kraftmesser rechts bei Loch 4</b>.</p>
+    <div id="figD"></div>
+    <h3>Vorhersage</h3>
+    <p>Du ziehst zuerst <b>senkrecht</b> nach unten. Dann ziehst du <b>schräg</b> (ca. 45°), bis der Hebel waagerecht ist.<br>
+    Was glaubst du? Beim schrägen Ziehen ist die Kraft am Kraftmesser …</p>
+    <div class="opts" id="dGuess"></div>
+    <div id="dMeasBox" class="hidden">
+      <h3>Messung</h3>
+      <p>Mach ein Foto, wenn du <b>schräg</b> ziehst. Man muss den Winkel und die Anzeige vom Kraftmesser sehen.</p>
+      <div id="dPhoto"></div>
+      <div class="row"><span class="lbl">senkrecht:</span>F = <input class="num" id="dFs" inputmode="decimal"><b>N</b></div>
+      <div class="row"><span class="lbl">schräg (45°):</span>F = <input class="num" id="dFa" inputmode="decimal"><b>N</b></div>
+      <div id="dRes"></div>
+    </div>
+    <div id="dExpl" class="hidden"></div>
+  </div>
+  <div class="next"><button class="btn sec" data-go="p5">← Zurück</button><button class="btn" data-go="p7">Weiter →</button></div>
+</section>
+
+<!-- 7 AUSWERTUNG -->
+<section class="page" id="p7">
+  <h2>Auswertung: Vorhersage und Messung vergleichen</h2>
+  <div class="card">
+    <h3>a) Übersicht</h3>
+    <div id="sumTable"></div>
+    <p>Das Diagramm zeigt: <b>Messung : Vorhersage</b>. 100 % bedeutet: perfekt! Grün: Abweichung bis 10 %.</p>
+    <div id="chart"></div>
+  </div>
+  <div class="card">
+    <h3>b) Warum gibt es Abweichungen?</h3>
+    <p>Wähle <b>alle passenden</b> Gründe (mindestens 3). Achtung: Einige Gründe sind falsch!</p>
+    <div id="reasons"></div>
+    <button class="btn" id="reasonChk">Prüfen</button>
+    <div class="fb" id="reasonFb"></div>
+  </div>
+  <div class="card">
+    <h3>c) Erkläre mit eigenen Worten</h3>
+    <p><b>1. Bei welchem Versuch war die Abweichung am größten? Warum?</b></p>
+    <div id="st1"></div>
+    <textarea id="t1" placeholder="Schreibe 2–3 Sätze …"></textarea>
+    <p style="margin-top:14px"><b>2. Wie kann man den Versuch genauer machen?</b></p>
+    <div id="st2"></div>
+    <textarea id="t2" placeholder="Schreibe 2–3 Sätze …"></textarea>
+    <p style="font-size:15px;color:var(--muted)">Tipp: Klicke auf einen Satzanfang. Er wird in das Feld geschrieben.</p>
+  </div>
+  <div class="card">
+    <h3>d) Merksatz</h3>
+    <div class="cloze" id="cloze"></div>
+    <button class="btn" id="clozeChk">Prüfen</button>
+    <div class="fb" id="clozeFb"></div>
+  </div>
+  <div class="next"><button class="btn sec" data-go="p6">← Zurück</button><button class="btn" data-go="p8">Weiter zur Abgabe →</button></div>
+</section>
+
+<!-- 8 ABGABE -->
+<section class="page" id="p8">
+  <h2>Abgabe 📤</h2>
+  <div class="card" id="finalBox"></div>
+  <div class="card">
+    <h3>So gibst du ab</h3>
+    <ol>
+      <li>Klicke auf <b>„📄 PDF erstellen“</b>. Das PDF wird heruntergeladen (iPad: in der App <b>Dateien → Downloads</b>).</li>
+      <li>Klicke auf <b>„💾 Datei speichern“</b>. Das ist deine Arbeitsdatei.</li>
+      <li>Lade <b>beide Dateien</b> in Google Classroom hoch.</li>
+    </ol>
+    <div class="row">
+      <button class="btn yellow" id="mkPdf">📄 PDF erstellen</button>
+      <button class="btn" id="saveBtn2">💾 Datei speichern</button>
+    </div>
+  </div>
+  <div class="card" style="text-align:center"><button class="btn sec" id="resetBtn">🔄 Alles löschen und neu beginnen</button></div>
+  <div class="next"><button class="btn sec" data-go="p7">← Zurück</button><span></span></div>
+</section>
+</main>
+
+<script>
+/* =====================================================================
+   common.js – GSIS Hebel-Seiten
+   Gemeinsamer Code für: index.html (Lernseite), experiment.html, lehrer.html
+   - Fortschritts-Dateien (verwürfelt + Prüfsumme, nicht lesbar/bearbeitbar)
+   - kleiner PDF-Generator (Helvetica, ohne externe Bibliothek)
+   - Definition und PDF-Protokoll des Hebel-Experiments
+   ===================================================================== */
+(function (global) {
+'use strict';
+
+/* ---------------- Datei-Format ---------------- */
+// Keine echte Verschlüsselung: Der Inhalt wird nur "verwürfelt" (XOR + Base64),
+// damit man ihn nicht einfach lesen oder bearbeiten kann. Eine Prüfsumme
+// erkennt, wenn jemand die Datei verändert hat.
+const KEY = 'GSIS-Hebel-Drehmoment-2026';
+const FORMAT = 'GSIS-HEBEL-1';
+const te = new TextEncoder(), td = new TextDecoder();
+
+function b64(u8) { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); }
+function ub64(s) { const b = atob(s); const u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; }
+function scramble(u8, app) { const k = te.encode(KEY + app), o = new Uint8Array(u8.length); for (let i = 0; i < u8.length; i++) o[i] = u8[i] ^ k[i % k.length] ^ ((i * 31 + 7) & 255); return o; }
+function checksum(str) { let h1 = 0x811c9dc5, h2 = 0x1234567; for (let i = 0; i < str.length; i++) { const c = str.charCodeAt(i); h1 = Math.imul(h1 ^ c, 0x01000193) >>> 0; h2 = Math.imul(h2 ^ c, 0x5bd1e995) >>> 0; } return h1.toString(36) + h2.toString(36); }
+
+function encode(app, obj) {
+  const json = JSON.stringify(obj), saved = new Date().toISOString();
+  return [FORMAT, app, saved, checksum(KEY + app + saved + json), b64(scramble(te.encode(json), app))].join('|');
+}
+function decode(text) {
+  const parts = String(text || '').trim().split('|');
+  if (parts.length !== 5 || parts[0] !== FORMAT) throw new Error('Das ist keine Hebel-Datei.');
+  const [, app, saved, sum, data] = parts;
+  let json;
+  try { json = td.decode(scramble(ub64(data), app)); } catch (e) { throw new Error('Die Datei ist beschädigt oder wurde verändert.'); }
+  if (checksum(KEY + app + saved + json) !== sum) throw new Error('Die Datei ist beschädigt oder wurde verändert.');
+  try { return { app, saved, data: JSON.parse(json) }; } catch (e) { throw new Error('Die Datei ist beschädigt oder wurde verändert.'); }
+}
+// async-Varianten (gleiche Schnittstelle wie vorher)
+async function encrypt(app, obj) { return encode(app, obj); }
+async function decrypt(text) { return decode(text); }
+
+/* ---------------- Dateien ---------------- */
+function download(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 3000);
+}
+async function saveFile(app, obj, name) {
+  const txt = encode(app, obj);
+  download(new Blob([txt], { type: 'application/octet-stream' }), name);
+}
+function pickFiles(multiple) {
+  return new Promise(res => {
+    const i = document.createElement('input');
+    i.type = 'file'; i.multiple = !!multiple; i.style.display = 'none';
+    i.onchange = async () => { const out = []; for (const f of i.files) out.push({ name: f.name, text: await f.text() }); i.remove(); res(out); };
+    document.body.appendChild(i); i.click();
+  });
+}
+function safeName(s) {
+  s = String(s || '').replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/Ä/g, 'Ae').replace(/Ö/g, 'Oe').replace(/Ü/g, 'Ue').replace(/ß/g, 'ss');
+  s = s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  return s || 'ohne-Name';
+}
+function today() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function fmt(x, dig) { if (x === null || x === undefined || isNaN(x)) return '–'; const p = Math.pow(10, dig === undefined ? 2 : dig); return String(Math.round(x * p) / p).replace('.', ','); }
+function parseNum(s) { if (s === null || s === undefined) return NaN; s = String(s).trim().replace(/\s/g, '').replace(',', '.'); return s === '' ? NaN : Number(s); }
+function deDate(iso) { if (!iso) return '–'; const d = new Date(iso); return d.toLocaleDateString('de-DE') + ' ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }
+
+/* ---------------- Mini-PDF ---------------- */
+const WID = {"F1":[278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584,761,556,0,222,556,333,1000,556,556,333,1000,667,333,1000,0,611,0,0,222,222,333,333,350,556,1000,333,1000,500,333,944,0,500,667,278,333,556,556,556,556,260,556,333,737,370,556,584,333,737,333,400,584,333,333,333,556,537,278,333,333,365,556,834,834,834,611,667,667,667,667,667,667,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,500,556,556,556,556,278,278,278,278,556,556,556,556,556,556,556,584,611,556,556,556,556,500,556,500],
+"F2":[278,333,474,556,556,889,722,238,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,333,333,584,584,584,611,975,722,722,722,722,667,611,778,722,278,556,722,611,833,722,778,667,778,722,667,611,722,667,944,667,667,611,333,278,333,584,556,333,556,611,556,611,556,333,611,611,278,278,556,278,889,611,611,611,611,389,556,333,611,556,778,556,556,500,389,280,389,584,761,556,0,278,556,500,1000,556,556,333,1000,667,333,1000,0,611,0,0,278,278,500,500,350,556,1000,333,1000,556,333,944,0,500,667,278,333,556,556,556,556,280,556,333,737,370,556,584,333,737,333,400,584,333,333,333,611,556,278,333,333,365,556,834,834,834,611,722,722,722,722,722,722,1000,722,667,667,667,667,278,278,278,278,722,722,778,778,778,778,778,584,778,722,722,722,722,667,667,611,556,556,556,556,556,556,889,556,556,556,556,556,278,278,278,278,611,611,611,611,611,611,611,584,611,611,611,611,611,556,611,556]};
+const CP = {0x20AC:0x80,0x201A:0x82,0x0192:0x83,0x201E:0x84,0x2026:0x85,0x2020:0x86,0x2021:0x87,0x02C6:0x88,0x2030:0x89,0x0160:0x8A,0x2039:0x8B,0x0152:0x8C,0x017D:0x8E,0x2018:0x91,0x2019:0x92,0x201C:0x93,0x201D:0x94,0x2022:0x95,0x2013:0x96,0x2014:0x97,0x02DC:0x98,0x2122:0x99,0x0161:0x9A,0x203A:0x9B,0x0153:0x9C,0x017E:0x9E,0x0178:0x9F};
+const REPL = {'→':'->','←':'<-','₁':'1','₂':'2','≈':'ca.','Δ':'Abw.','≤':'<=','≥':'>=','✓':'ok','✔':'ok','✘':'x','✗':'x','−':'-','⋅':'·','\t':' '};
+function enc(s) {
+  let o = '';
+  for (const ch of String(s == null ? '' : s)) {
+    if (REPL[ch] !== undefined) { o += REPL[ch]; continue; }
+    const c = ch.codePointAt(0);
+    if ((c >= 32 && c < 127) || (c >= 160 && c < 256)) o += String.fromCharCode(c);
+    else if (CP[c]) o += String.fromCharCode(CP[c]);
+    else if (c === 10 || c === 13) o += ' ';
+    else if (c > 0xFFFF || (c >= 0xFE00 && c <= 0xFE0F) || c === 0x200D || (c >= 0x2600 && c <= 0x27BF)) { /* Emoji weglassen */ }
+    else o += '?';
+  }
+  return o;
+}
+function pesc(s) { return s.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)'); }
+function rgb(c) { return (c || [0, 0, 0]).map(v => (v / 255).toFixed(3)).join(' '); }
+
+class MiniPDF {
+  constructor() { this.W = 595.28; this.H = 841.89; this.pages = []; this.images = []; this.addPage(); }
+  /* JPEG (dataURL) einbetten; w,h = Pixelgröße. Gibt Namen zurück. */
+  addImage(dataURL, w, h) {
+    const bin = atob(String(dataURL).split(',')[1] || '');
+    const name = 'Im' + (this.images.length + 1);
+    this.images.push({ name, bin, w, h });
+    return name;
+  }
+  drawImage(name, x, y, w, h) { this.cur.push(`q ${w.toFixed(2)} 0 0 ${h.toFixed(2)} ${x.toFixed(2)} ${(this.H - y - h).toFixed(2)} cm /${name} Do Q`); }
+  addPage() { this.cur = []; this.pages.push(this.cur); }
+  width(s, size, bold) { const w = WID[bold ? 'F2' : 'F1']; let t = 0; const e = enc(s); for (let i = 0; i < e.length; i++) { const c = e.charCodeAt(i); t += (c >= 32 ? w[c - 32] : 0) || 500; } return t / 1000 * size; }
+  text(x, y, s, o) {
+    o = o || {}; const size = o.size || 10, bold = !!o.bold; let e = enc(s);
+    if (o.align === 'center') x -= this.width(s, size, bold) / 2; else if (o.align === 'right') x -= this.width(s, size, bold);
+    this.cur.push(`BT /${bold ? 'F2' : 'F1'} ${size} Tf ${rgb(o.color)} rg ${x.toFixed(2)} ${(this.H - y).toFixed(2)} Td (${pesc(e)}) Tj ET`);
+  }
+  line(x1, y1, x2, y2, o) { o = o || {}; this.cur.push(`${(o.w || 0.5)} w ${rgb(o.color || [120, 120, 120])} RG ${o.dash ? '[3 2] 0 d' : '[] 0 d'} ${x1.toFixed(2)} ${(this.H - y1).toFixed(2)} m ${x2.toFixed(2)} ${(this.H - y2).toFixed(2)} l S`); }
+  rect(x, y, w, h, o) {
+    o = o || {}; const Y = (this.H - y - h).toFixed(2);
+    let s = `${(o.lw || 0.5)} w [] 0 d `;
+    if (o.fill) s += `${rgb(o.fill)} rg `; if (o.stroke) s += `${rgb(o.stroke)} RG `;
+    s += `${x.toFixed(2)} ${Y} ${w.toFixed(2)} ${h.toFixed(2)} re ` + (o.fill && o.stroke ? 'B' : o.fill ? 'f' : 'S');
+    this.cur.push(s);
+  }
+  wrap(s, maxW, size, bold) {
+    const out = [];
+    String(s == null ? '' : s).split(/\n/).forEach(par => {
+      const words = par.split(/\s+/).filter(Boolean); let line = '';
+      if (!words.length) { out.push(''); return; }
+      words.forEach(w => {
+        const t = line ? line + ' ' + w : w;
+        if (this.width(t, size, bold) <= maxW) line = t;
+        else {
+          if (line) out.push(line);
+          // sehr lange Wörter hart umbrechen
+          while (this.width(w, size, bold) > maxW) { let k = w.length; while (k > 1 && this.width(w.slice(0, k), size, bold) > maxW) k--; out.push(w.slice(0, k)); w = w.slice(k); }
+          line = w;
+        }
+      });
+      out.push(line);
+    });
+    return out;
+  }
+  output() {
+    const objs = [];
+    objs[1] = '<< /Type /Catalog /Pages 2 0 R >>';
+    objs[3] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>';
+    objs[4] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>';
+    const kids = [], imgBase = 5 + 2 * this.pages.length;
+    const xo = this.images.length ? ' /XObject << ' + this.images.map((im, j) => `/${im.name} ${imgBase + j} 0 R`).join(' ') + ' >>' : '';
+    this.images.forEach((im, j) => { objs[imgBase + j] = `<< /Type /XObject /Subtype /Image /Width ${im.w} /Height ${im.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${im.bin.length} >>\nstream\n${im.bin}\nendstream`; });
+    this.pages.forEach((p, i) => {
+      const po = 5 + 2 * i, co = 6 + 2 * i; kids.push(po + ' 0 R');
+      const data = p.join('\n');
+      objs[po] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${this.W} ${this.H}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >>${xo} >> /Contents ${co} 0 R >>`;
+      objs[co] = `<< /Length ${data.length} >>\nstream\n${data}\nendstream`;
+    });
+    objs[2] = `<< /Type /Pages /Kids [${kids.join(' ')}] /Count ${this.pages.length} >>`;
+    let out = '%PDF-1.4\n%\xE2\xE3\xCF\xD3\n'; const off = [];
+    for (let k = 1; k < objs.length; k++) { off[k] = out.length; out += k + ' 0 obj\n' + objs[k] + '\nendobj\n'; }
+    const xr = out.length;
+    out += 'xref\n0 ' + objs.length + '\n0000000000 65535 f \n';
+    for (let k = 1; k < objs.length; k++) out += String(off[k]).padStart(10, '0') + ' 00000 n \n';
+    out += 'trailer\n<< /Size ' + objs.length + ' /Root 1 0 R >>\nstartxref\n' + xr + '\n%%EOF';
+    const u = new Uint8Array(out.length); for (let i = 0; i < out.length; i++) u[i] = out.charCodeAt(i) & 255;
+    return new Blob([u], { type: 'application/pdf' });
+  }
+}
+
+/* Fließtext-Layout mit automatischem Seitenumbruch */
+class FlowPDF extends MiniPDF {
+  constructor(footer) { super(); this.m = 42; this.y = this.m; this.footer = footer || ''; }
+  get cw() { return this.W - 2 * this.m; }
+  ensure(h) { if (this.y + h > this.H - this.m - 18) { this.addPage(); this.y = this.m; } }
+  gap(h) { this.y += h; }
+  h1(t) { this.ensure(40); this.rect(this.m, this.y, this.cw, 30, { fill: [29, 36, 51] }); this.text(this.m + 10, this.y + 20, t, { size: 15, bold: true, color: [255, 255, 255] }); this.y += 40; }
+  h2(t) { this.ensure(34); this.y += 6; this.text(this.m, this.y + 12, t, { size: 12.5, bold: true, color: [30, 64, 175] }); this.line(this.m, this.y + 17, this.m + this.cw, this.y + 17, { color: [242, 183, 5], w: 1.2 }); this.y += 26; }
+  para(t, o) {
+    o = o || {}; const size = o.size || 10, lh = size * 1.35, ind = o.indent || 0;
+    const lines = this.wrap(t, this.cw - ind, size, o.bold);
+    lines.forEach(l => { this.ensure(lh); this.text(this.m + ind, this.y + size, l, { size, bold: o.bold, color: o.color }); this.y += lh; });
+    this.y += o.after === undefined ? 4 : o.after;
+  }
+  box(t, o) { // umrandeter Textkasten (z.B. Schülertext)
+    o = o || {}; const size = o.size || 10, lh = size * 1.35;
+    const lines = this.wrap(t || '(keine Antwort)', this.cw - 16, size);
+    let i = 0;
+    while (i < lines.length) {
+      this.ensure(lh + 12);
+      const room = Math.max(1, Math.floor((this.H - this.m - 18 - this.y - 12) / lh));
+      const part = lines.slice(i, i + room);
+      const h = part.length * lh + 10;
+      this.rect(this.m, this.y, this.cw, h, { fill: o.fill || [246, 248, 252], stroke: [210, 216, 228] });
+      part.forEach((l, k) => this.text(this.m + 8, this.y + 5 + size + k * lh, l, { size, color: t ? [0, 0, 0] : [140, 140, 140] }));
+      this.y += h + 6; i += part.length;
+    }
+  }
+  /* cols: [{w (Anteil), label, align}], rows: [[cell]], cell: string | {t, fill, bold, color} */
+  table(cols, rows, o) {
+    o = o || {}; const size = o.size || 9, lh = size * 1.3, pad = 4;
+    const tot = cols.reduce((a, c) => a + c.w, 0); const ws = cols.map(c => c.w / tot * this.cw);
+    const isO = c => typeof c === 'object' && c !== null;
+    const cellLines = (cell, k, bold) => this.wrap(isO(cell) ? cell.t : cell, ws[k] - 2 * pad, size, bold || (isO(cell) && !!cell.bold));
+    const drawRow = (cells, header) => {
+      const L = cells.map((c, k) => cellLines(c, k, header));
+      const h = Math.max(...L.map(l => l.length)) * lh + 2 * pad;
+      if (!header) this.ensure(h);
+      let x = this.m;
+      cells.forEach((c, k) => {
+        const fill = header ? [235, 239, 247] : (isO(c) && c.fill) || null;
+        this.rect(x, this.y, ws[k], h, { fill: fill || undefined, stroke: [190, 198, 212] });
+        const al = cols[k].align || 'left';
+        L[k].forEach((l, j) => {
+          const tx = al === 'center' ? x + ws[k] / 2 : al === 'right' ? x + ws[k] - pad : x + pad;
+          this.text(tx, this.y + pad + size + j * lh - 1, l, { size, bold: header || (isO(c) && !!c.bold), align: al, color: isO(c) ? c.color : undefined });
+        });
+        x += ws[k];
+      });
+      this.y += h;
+    };
+    const head = cols.map(c => c.label);
+    const hH = Math.max(...head.map((c, k) => cellLines(c, k, true).length)) * lh + 2 * pad;
+    this.ensure(hH + lh * 2 + 2 * pad); drawRow(head, true);
+    rows.forEach(r => {
+      const L = r.map((c, k) => cellLines(c, k));
+      const h = Math.max(...L.map(l => l.length)) * lh + 2 * pad;
+      if (this.y + h > this.H - this.m - 18) { this.addPage(); this.y = this.m; drawRow(head, true); }
+      drawRow(r, false);
+    });
+    this.y += 8;
+  }
+  finish() {
+    const n = this.pages.length;
+    this.pages.forEach((p, i) => { this.cur = p; this.line(this.m, this.H - 30, this.W - this.m, this.H - 30, { color: [200, 200, 200] }); this.text(this.m, this.H - 18, this.footer, { size: 8, color: [110, 110, 110] }); this.text(this.W - this.m, this.H - 18, 'Seite ' + (i + 1) + ' / ' + n, { size: 8, align: 'right', color: [110, 110, 110] }); });
+    return this.output();
+  }
+}
+
+/* ---------------- Lernseite: Metadaten ---------------- */
+const LERN = {
+  sections: {
+    s1: { label: '1 Goldene Regel', ids: ['q1a', 'q1b', 'q1c', 'q1d'] },
+    s2: { label: '2 Drehmoment', ids: ['q2a', 'q2b', 'q2c'] },
+    s3: { label: '3 Hebel-Labor', ids: ['lab-mess', 'lab-regel', 'm0', 'm1', 'm2', 'm3', 'm4'] },
+    s4: { label: '4 Übungen', ids: ['e0', 'e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7'] },
+    s5: { label: '5 Test', ids: ['t0', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9'] }
+  },
+  labels: {
+    q1a: 'Halbe Kraft → Weg?', q1b: 'Flaschenzug 4 Seile, 400 N → Kraft', q1c: 'Flaschenzug: Seilweg bei 2 m', q1d: 'Was spart eine einfache Maschine?',
+    q2a: 'M = 0,3 m · 20 N', q2b: 'Tür: Wo drücken?', q2c: 'Tür: Kraft bei r = 0,2 m',
+    'lab-mess': '3 Messungen im Gleichgewicht gespeichert', 'lab-regel': 'Erkenntnis: F · r ist gleich', m0: 'Auftrag 1', m1: 'Auftrag 2', m2: 'Auftrag 3', m3: 'Auftrag 4', m4: 'Auftrag 5',
+    t0: 'Formel M = r · F', t1: 'Einheit N·m', t2: 'Goldene Regel', t3: 'Wann Gleichgewicht?', t4: '3 N·20 cm = F·30 cm', t5: '4 N·15 cm = 6 N·r', t6: 'Welche Seite geht runter?', t7: 'Flaschenzug 6 Seile, 900 N', t8: 'Flaschenzug: Seilweg 4 m', t9: 'Wippe 750 N / 300 N'
+  }
+};
+LERN.max = Object.values(LERN.sections).reduce((a, s) => a + s.ids.length, 0);
+
+/* ---------------- Experiment: Definition ---------------- */
+// L / R: Liste von [Anzahl Massestücke, Loch-Nr.]; null = gesucht. KM = Kraftmesser an Loch-Nr. (rechts)
+const EXP = {
+  groups: [
+    { key: 'A', title: 'Versuch A: Wo muss das Gewicht hängen?', kind: 'r',
+      intro: 'Links hängen Massestücke. Rechts hängst du Massestücke an. Du suchst das Loch für das Gleichgewicht.',
+      rows: [
+        { id: 'A1', L: [[2, 3]], R: [[1, null]] },
+        { id: 'A2', L: [[3, 4]], R: [[2, null]] },
+        { id: 'A3', L: [[1, 5]], R: [[2, null]] }
+      ] },
+    { key: 'B', title: 'Versuch B: Wie viel Kraft brauche ich?', kind: 'F',
+      intro: 'Links hängen Massestücke. Rechts hängst du den Kraftmesser an ein Loch. Ziehe senkrecht nach unten, bis der Hebel waagerecht ist. Lies die Kraft ab.',
+      rows: [
+        { id: 'B1', L: [[4, 3]], KM: 6 },
+        { id: 'B2', L: [[2, 5]], KM: 2 },
+        { id: 'B3', L: [[3, 2]], KM: 8 }
+      ] },
+    { key: 'C', title: 'Versuch C: Mehrere Gewichte', kind: 'r',
+      intro: 'Jetzt hängen an einer Seite Gewichte an zwei Löchern. Rechne zuerst das Drehmoment für jedes Loch aus und addiere.',
+      rows: [
+        { id: 'C1', L: [[1, 2], [2, 4]], R: [[2, null]] },
+        { id: 'C2', L: [[2, 3]], R: [[1, 2], [1, null]] }
+      ] }
+  ],
+  reasons: [
+    { id: 'r1', t: 'Es gibt Reibung im Drehpunkt.', ok: true },
+    { id: 'r2', t: 'Der Hebel war am Anfang nicht genau waagerecht.', ok: true },
+    { id: 'x1', t: 'Das Hebelgesetz ist falsch.', ok: false },
+    { id: 'r3', t: 'Der Kraftmesser war nicht auf Null gestellt.', ok: true },
+    { id: 'r4', t: 'Wir haben den Kraftmesser nicht genau senkrecht gezogen.', ok: true },
+    { id: 'x2', t: 'Der Hebel hat die falsche Farbe.', ok: false },
+    { id: 'r5', t: 'Wir haben ungenau abgelesen.', ok: true },
+    { id: 'r6', t: 'Die Massestücke haben nicht genau die gleiche Masse.', ok: true },
+    { id: 'x3', t: 'Die Luft drückt den Hebel nach unten.', ok: false },
+    { id: 'r7', t: 'Das richtige Loch gibt es nicht (der Wert liegt zwischen zwei Löchern).', ok: true },
+    { id: 'r8', t: 'Wir haben den Lochabstand ungenau gemessen.', ok: true },
+    { id: 'x4', t: 'Der Drehpunkt ist in der Mitte.', ok: false }
+  ],
+  cloze: [
+    { pre: 'Ein Hebel ist im Gleichgewicht, wenn das', opts: ['Gewicht', 'Drehmoment', 'Abstand'], ans: 'Drehmoment', post: 'links' },
+    { pre: 'genauso groß ist wie das', opts: ['Gewicht', 'Drehmoment', 'Abstand'], ans: 'Drehmoment', post: 'rechts.' },
+    { pre: 'Das Drehmoment berechnet man mit M = r ·', opts: ['F', 'm', 's'], ans: 'F', post: '.' },
+    { pre: 'Doppelte Kraft braucht den', opts: ['doppelten', 'halben', 'gleichen'], ans: 'halben', post: 'Abstand.' },
+    { pre: 'Bei einem echten Versuch gibt es immer kleine', opts: ['Abweichungen', 'Drehpunkte', 'Hebel'], ans: 'Abweichungen', post: '.' }
+  ],
+  th: [
+    { id: 'th1', q: 'Wann ist der Hebel im Gleichgewicht?', opts: ['Wenn links und rechts gleich viele Massestücke hängen.', 'Wenn das Drehmoment links gleich groß ist wie rechts.', 'Wenn links und rechts der Abstand gleich ist.'], c: 1 },
+    { id: 'th2', q: 'Rechts hängen doppelt so viele Massestücke wie links. Wo müssen sie hängen?', opts: ['Doppelt so weit weg vom Drehpunkt.', 'Gleich weit weg.', 'Halb so weit weg vom Drehpunkt.'], c: 2 },
+    { id: 'dex', q: 'Warum braucht man beim schrägen Ziehen mehr Kraft?', opts: ['Der Kraftmesser ist kaputt.', 'Nur ein Teil der Kraft dreht den Hebel. Der wirksame Hebelarm ist kleiner.', 'Die Massestücke werden schwerer.', 'Die Reibung wird kleiner.'], c: 1 }
+  ]
+};
+EXP.rows = [].concat(...EXP.groups.map(g => g.rows.map(r => Object.assign({ kind: g.kind, group: g.key }, r))));
+EXP.row = id => EXP.rows.find(r => r.id === id);
+
+function setupText(r) {
+  const st = a => a.map(([n, l]) => `${n} Stück bei Loch ${l === null ? '?' : l}`).join(' + ');
+  const left = 'Links: ' + st(r.L);
+  const right = r.kind === 'F' ? `Rechts: Kraftmesser bei Loch ${r.KM}` : 'Rechts: ' + st(r.R);
+  return { left, right };
+}
+/* Vorhersage: F = Kraft eines Massestücks (N), d = Lochabstand (cm). Ergebnis in cm bzw. N */
+function predict(r, F, d) {
+  if (!(F > 0) || !(d > 0)) return NaN;
+  const ML = r.L.reduce((a, [n, l]) => a + n * F * l * d, 0);
+  if (r.kind === 'F') return ML / (r.KM * d);
+  let known = 0, nu = 0;
+  r.R.forEach(([n, l]) => { if (l === null) nu = n; else known += n * F * l * d; });
+  return (ML - known) / (nu * F);
+}
+function predUnit(r) { return r.kind === 'F' ? 'N' : 'cm'; }
+function predSym(r) { return r.kind === 'F' ? 'F₂' : 'r₂'; }
+function solText(r, F, d) {
+  const p = predict(r, F, d);
+  const ML = r.L.reduce((a, [n, l]) => a + n * F * l * d, 0);
+  const mlTxt = r.L.map(([n, l]) => `${fmt(n * F)} N · ${fmt(l * d)} cm`).join(' + ');
+  if (r.kind === 'F') return `M links = ${mlTxt} = ${fmt(ML)} N·cm. F₂ = ${fmt(ML)} N·cm : ${fmt(r.KM * d)} cm = ${fmt(p)} N`;
+  const known = r.R.filter(x => x[1] !== null), nu = r.R.find(x => x[1] === null)[0];
+  let s = `M links = ${mlTxt} = ${fmt(ML)} N·cm. `;
+  if (known.length) { const k = known.reduce((a, [n, l]) => a + n * F * l * d, 0); s += `Rechts schon: ${fmt(k)} N·cm, es fehlen ${fmt(ML - k)} N·cm. `; s += `r₂ = ${fmt(ML - k)} N·cm : ${fmt(nu * F)} N = ${fmt(p)} cm`; }
+  else s += `r₂ = ${fmt(ML)} N·cm : ${fmt(nu * F)} N = ${fmt(p)} cm`;
+  return s;
+}
+function devClass(pct) { if (isNaN(pct)) return ''; const a = Math.round(Math.abs(pct) * 10) / 10; return a <= 10 ? 'good' : a <= 25 ? 'mid' : 'bad'; }
+function devWord(pct) { const c = devClass(pct); return c === 'good' ? 'klein' : c === 'mid' ? 'mittel' : c === 'bad' ? 'groß' : ''; }
+
+/* Fehlversuche des Experiments nach Bereichen */
+function expWrong(st) {
+  const q = id => (st.q && st.q[id] && st.q[id].wrong) || 0;
+  const rows = EXP.rows.reduce((a, r) => a + ((st.rows && st.rows[r.id] && st.rows[r.id].wrong) || 0), 0);
+  const w = {
+    'Vorbereitung (Kraft F)': (st.prep && st.prep.Fwrong) || 0,
+    'Theorie-Fragen': q('th1') + q('th2'),
+    'Vorhersagen A–C': rows,
+    'Versuch D (Erklärung)': q('dex'),
+    'Gründe für Abweichungen': (st.reasons && st.reasons.wrong) || 0,
+    'Merksatz': (st.cloze && st.cloze.wrong) || 0
+  };
+  w.total = Object.values(w).reduce((a, b) => a + b, 0);
+  return w;
+}
+/* Fotos: Liste aller Versuche mit Foto-Objekt {src,w,h,t} */
+function expPhotos(st) {
+  const out = EXP.rows.map(r => ({ id: r.id, photo: ((st.rows || {})[r.id] || {}).photo || null, r }));
+  out.push({ id: 'D', photo: (st.D || {}).photo || null, r: null });
+  return out;
+}
+/* Fortschritt des Experiments */
+function expProgress(st) {
+  const items = [];
+  const p = st.prep || {};
+  items.push(!!p.Fok, parseNum(p.d) > 0, !!p.level);
+  ['th1', 'th2'].forEach(id => items.push(!!(st.q && st.q[id] && st.q[id].done)));
+  EXP.rows.forEach(r => { const x = (st.rows || {})[r.id] || {}; items.push(!!(x.ok || x.revealed), !!x.photo, !isNaN(parseNum(x.meas))); });
+  const D = st.D || {};
+  items.push(D.guess !== undefined && D.guess !== null, !!D.photo, !isNaN(parseNum(D.Fs)), !isNaN(parseNum(D.Fa)), !!(st.q && st.q.dex && st.q.dex.done));
+  items.push(!!(st.reasons && st.reasons.done), !!(st.texts && st.texts.t1 && st.texts.t1.trim().length > 10), !!(st.texts && st.texts.t2 && st.texts.t2.trim().length > 10), !!(st.cloze && st.cloze.done));
+  const done = items.filter(Boolean).length;
+  return { done, total: items.length, pct: Math.round(done / items.length * 100) };
+}
+function expRowResult(st, r) {
+  const x = (st.rows || {})[r.id] || {}, p = st.prep || {};
+  const pred = predict(r, p.Fval, parseNum(p.d)), meas = parseNum(x.meas);
+  const ratio = (!isNaN(meas) && pred > 0) ? meas / pred : NaN;
+  return { pred, meas, ratio, pct: isNaN(ratio) ? NaN : (ratio - 1) * 100, x };
+}
+
+/* ---------------- Experiment: PDF-Protokoll ---------------- */
+function buildExpPDF(st) {
+  const name = st.name || '(ohne Name)';
+  const pdf = new FlowPDF(`Versuchsprotokoll Hebelgesetz – ${name}, ${st.klasse || ''} – erstellt ${deDate(new Date().toISOString())}`);
+  const p = st.prep || {}, F = p.Fval, d = parseNum(p.d);
+  pdf.h1('Versuchsprotokoll: Das Hebelgesetz');
+  pdf.table([{ w: 1, label: 'Name' }, { w: 0.5, label: 'Klasse' }, { w: 1, label: 'Partner / Gruppe' }, { w: 0.6, label: 'Datum' }],
+    [[{ t: name, bold: true }, st.klasse || '', st.partner || '', st.datum || '']], { size: 10 });
+  const prog = expProgress(st), W = expWrong(st);
+  pdf.para(`Bearbeitet: ${prog.pct} %  ·  Fehlversuche gesamt: ${W.total}`, { size: 9, color: [90, 90, 90] });
+
+  pdf.h2('1  Vorbereitung');
+  pdf.table([{ w: 2, label: 'Frage' }, { w: 1.4, label: 'Antwort' }], [
+    ['Masse eines Massestücks', p.m ? p.m + ' g' : '–'],
+    ['Gewichtskraft eines Massestücks F', p.Fok ? fmt(F, 3) + ' N' : (p.F ? p.F + ' N (nicht geprüft)' : '–')],
+    ['Lochabstand d', d > 0 ? fmt(d) + ' cm' : '–'],
+    ['Ist der Hebel ohne Gewichte waagerecht?', p.level === 'ja' ? 'ja' : p.level === 'nein' ? 'nein – wir haben ihn eingestellt' : '–']
+  ]);
+  pdf.h2('2  Theorie: Was erwarte ich?');
+  EXP.th.slice(0, 2).forEach(t => { const s = (st.q || {})[t.id] || {}; pdf.para(`${t.q}  ->  ${s.done ? t.opts[t.c] : '(nicht beantwortet)'}  (Fehlversuche: ${s.wrong || 0})`, { size: 9.5 }); });
+
+  pdf.h2('3  Versuche A, B, C: Vorhersage und Messung');
+  pdf.para('Erst rechnen (Vorhersage), dann messen. Abweichung = (Messung - Vorhersage) : Vorhersage.', { size: 9, color: [90, 90, 90] });
+  EXP.groups.forEach(g => {
+    pdf.para(g.title, { bold: true, size: 10.5, after: 2 });
+    const rows = g.rows.map(r0 => {
+      const r = EXP.row(r0.id), R = expRowResult(st, r), s = setupText(r), x = R.x;
+      const col = devClass(R.pct) === 'good' ? [220, 252, 231] : devClass(R.pct) === 'mid' ? [255, 237, 213] : devClass(R.pct) === 'bad' ? [254, 226, 226] : null;
+      const predTxt = (x.ok || x.revealed) ? fmt(R.pred) + ' ' + predUnit(r) + (x.revealed ? ' (Lösung gezeigt)' : '') : (x.pred ? x.pred + ' (falsch)' : '–');
+      return [r.id, s.left, s.right, predTxt, isNaN(R.meas) ? '–' : fmt(R.meas) + ' ' + predUnit(r),
+        { t: isNaN(R.pct) ? '–' : (R.pct > 0 ? '+' : '') + fmt(R.pct, 0) + ' % (' + devWord(R.pct) + ')', fill: col }, String(x.wrong || 0)];
+    });
+    pdf.table([{ w: 0.35, label: 'Nr.' }, { w: 1.45, label: 'Aufbau links' }, { w: 1.3, label: 'Aufbau rechts' }, { w: 1.05, label: 'Vorhersage ' + (g.kind === 'F' ? 'F2' : 'r2') }, { w: 0.8, label: 'Messung' }, { w: 0.95, label: 'Abweichung' }, { w: 0.55, label: 'Fehl-\nvers.', align: 'center' }], rows, { size: 8.5 });
+    const obs = (st.obs || {})[g.key];
+    pdf.ensure(48); pdf.para('Beobachtungen:', { size: 9, bold: true, after: 1 }); pdf.box(obs, { size: 9 });
+  });
+
+  pdf.h2('4  Versuch D: Schräg ziehen');
+  const D = st.D || {}, gs = ['größer', 'kleiner', 'gleich groß'];
+  pdf.table([{ w: 2, label: 'Frage' }, { w: 1.4, label: 'Antwort' }], [
+    ['Vorhersage: Beim schrägen Ziehen ist die Kraft …', D.guess != null ? gs[D.guess] : '–'],
+    ['Messung: Kraft senkrecht', isNaN(parseNum(D.Fs)) ? '–' : fmt(parseNum(D.Fs)) + ' N'],
+    ['Messung: Kraft schräg (ca. 45°)', isNaN(parseNum(D.Fa)) ? '–' : fmt(parseNum(D.Fa)) + ' N'],
+    ['Erklärung', (st.q && st.q.dex && st.q.dex.done) ? EXP.th[2].opts[EXP.th[2].c] + ` (Fehlversuche: ${st.q.dex.wrong || 0})` : '–']
+  ]);
+
+  // Diagramm: Messung / Vorhersage
+  pdf.h2('5  Vergleich: Messung im Verhältnis zur Vorhersage');
+  const ch = 170; pdf.ensure(ch + 30);
+  const x0 = pdf.m + 40, y0 = pdf.y + 10, w = pdf.cw - 50, h = ch;
+  const maxR = 1.6, yOf = v => y0 + h - Math.min(v, maxR) / maxR * h;
+  pdf.rect(x0, yOf(1.1), w, yOf(0.9) - yOf(1.1), { fill: [220, 252, 231] });
+  [0, 0.5, 1, 1.5].forEach(v => { pdf.line(x0, yOf(v), x0 + w, yOf(v), { color: [215, 215, 215], dash: v !== 1 }); pdf.text(x0 - 6, yOf(v) + 3, fmt(v * 100, 0) + ' %', { size: 8, align: 'right', color: [90, 90, 90] }); });
+  pdf.line(x0, yOf(1), x0 + w, yOf(1), { color: [22, 163, 74], w: 1.2 });
+  const bw = w / EXP.rows.length;
+  EXP.rows.forEach((r, i) => {
+    const R = expRowResult(st, r), bx = x0 + i * bw + bw * 0.2;
+    if (!isNaN(R.ratio)) { const c = devClass(R.pct) === 'good' ? [22, 163, 74] : devClass(R.pct) === 'mid' ? [234, 128, 12] : [220, 38, 38]; pdf.rect(bx, yOf(R.ratio), bw * 0.6, y0 + h - yOf(R.ratio), { fill: c }); pdf.text(bx + bw * 0.3, yOf(R.ratio) - 3, fmt(R.ratio * 100, 0) + '%', { size: 7.5, align: 'center' }); }
+    pdf.text(bx + bw * 0.3, y0 + h + 12, r.id, { size: 8.5, align: 'center', bold: true });
+  });
+  pdf.line(x0, y0 + h, x0 + w, y0 + h, { color: [80, 80, 80] });
+  pdf.y = y0 + h + 22;
+  pdf.para('100 % = Messung und Vorhersage sind gleich. Grüner Bereich: Abweichung bis 10 %.', { size: 8.5, color: [90, 90, 90] });
+
+  pdf.h2('6  Diskussion');
+  const sel = (st.reasons && st.reasons.sel) || [];
+  pdf.para('Mögliche Gründe für die Abweichungen (ausgewählt):', { bold: true, size: 9.5, after: 2 });
+  if (!sel.length) pdf.para('(keine ausgewählt)', { size: 9.5, indent: 10 });
+  EXP.reasons.filter(r => sel.includes(r.id)).forEach(r => pdf.para('• ' + r.t, { size: 9.5, indent: 10, after: 1 }));
+  pdf.para(`(Fehlversuche: ${(st.reasons && st.reasons.wrong) || 0})`, { size: 8.5, color: [90, 90, 90] });
+  pdf.ensure(48); pdf.para('Bei welchem Versuch war die Abweichung am größten? Warum?', { bold: true, size: 9.5, after: 2 }); pdf.box((st.texts || {}).t1);
+  pdf.ensure(48); pdf.para('Wie kann man den Versuch genauer machen?', { bold: true, size: 9.5, after: 2 }); pdf.box((st.texts || {}).t2);
+
+  pdf.h2('7  Merksatz');
+  const cz = st.cloze || {};
+  pdf.para(EXP.cloze.map((c, i) => `${c.pre} [${(cz.vals || [])[i] || '___'}] ${c.post}`).join(' '), { size: 10.5 });
+  pdf.para(`(${cz.done ? 'richtig' : 'noch nicht richtig gelöst'}, Fehlversuche: ${cz.wrong || 0})`, { size: 8.5, color: [90, 90, 90] });
+
+  // Fotos
+  const ph = expPhotos(st);
+  pdf.h2(`8  Fotos der Versuche (${ph.filter(p => p.photo).length} von ${ph.length})`);
+  const cols = 3, gapX = 10, cwid = (pdf.cw - gapX * (cols - 1)) / cols, maxH = 135;
+  for (let i = 0; i < ph.length; i += cols) {
+    const rowItems = ph.slice(i, i + cols);
+    const hs = rowItems.map(p => p.photo ? Math.min(maxH, cwid * p.photo.h / p.photo.w) : 40);
+    const rh = Math.max(...hs) + 26;
+    pdf.ensure(rh);
+    rowItems.forEach((p, k) => {
+      const x = pdf.m + k * (cwid + gapX);
+      let cap = p.id;
+      if (p.r) { const R = expRowResult(st, p.r); if (!isNaN(R.meas)) cap += ' – Messung: ' + fmt(R.meas) + ' ' + predUnit(p.r); }
+      else { const D = st.D || {}; cap += ' – schräg: ' + (D.Fa || '–') + ' N'; }
+      if (p.photo) {
+        let w = cwid, h = cwid * p.photo.h / p.photo.w; if (h > maxH) { h = maxH; w = maxH * p.photo.w / p.photo.h; }
+        pdf.drawImage(pdf.addImage(p.photo.src, p.photo.w, p.photo.h), x, pdf.y, w, h);
+        pdf.rect(x, pdf.y, w, h, { stroke: [190, 198, 212] });
+        pdf.text(x, pdf.y + h + 10, cap, { size: 8, bold: true });
+        pdf.text(x, pdf.y + h + 20, 'Foto: ' + deDate(p.photo.t), { size: 7.5, color: [110, 110, 110] });
+      } else {
+        pdf.rect(x, pdf.y, cwid, 40, { fill: [254, 226, 226], stroke: [220, 150, 150] });
+        pdf.text(x + cwid / 2, pdf.y + 24, p.id + ': kein Foto', { size: 9, align: 'center', color: [153, 27, 27], bold: true });
+      }
+    });
+    pdf.y += rh + 4;
+  }
+
+  pdf.ensure(200); pdf.h2('Fehlversuche');
+  pdf.table([{ w: 3, label: 'Bereich' }, { w: 1, label: 'Fehlversuche', align: 'center' }],
+    Object.keys(W).filter(k => k !== 'total').map(k => [k, String(W[k])]).concat([[{ t: 'Gesamt', bold: true }, { t: String(W.total), bold: true }]]), { size: 9 });
+  const T = st.teacher || {};
+  if (T.comment || T.grade) {
+    pdf.h2('Lehrer');
+    if (T.grade) pdf.para('Bewertung: ' + T.grade, { bold: true });
+    if (T.comment) pdf.box(T.comment);
+  }
+  return pdf.finish();
+}
+
+global.HB = { encrypt, decrypt, saveFile, download, pickFiles, safeName, today, fmt, parseNum, deDate, MiniPDF, FlowPDF, LERN, EXP, setupText, predict, predUnit, predSym, solText, devClass, devWord, expWrong, expProgress, expRowResult, expPhotos, buildExpPDF };
+})(window);
+
+</script>
+<script>
+const {fmt,parseNum,EXP}=HB;
+const KEY='hebel_experiment_v1';
+const $=id=>document.getElementById(id);
+function el(t,c,h){const e=document.createElement(t);if(c)e.className=c;if(h!==undefined)e.innerHTML=h;return e;}
+function toast(t,ms){const d=el('div','toast',t);document.body.appendChild(d);setTimeout(()=>d.remove(),ms||3500);}
+/* ---------- Foto aufnehmen und verkleinern ---------- */
+function takePhoto(){
+  return new Promise((res,rej)=>{
+    const i=document.createElement('input');i.type='file';i.accept='image/*';i.setAttribute('capture','environment');i.style.display='none';
+    i.onchange=()=>{const f=i.files[0];i.remove();if(!f){res(null);return;}
+      const url=URL.createObjectURL(f),img=new Image();
+      img.onload=()=>{const M=900,sc=Math.min(1,M/Math.max(img.naturalWidth,img.naturalHeight));
+        const w=Math.round(img.naturalWidth*sc),h=Math.round(img.naturalHeight*sc),c=document.createElement('canvas');c.width=w;c.height=h;
+        const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);URL.revokeObjectURL(url);
+        res({src:c.toDataURL('image/jpeg',0.6),w,h,t:new Date().toISOString()});};
+      img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('Das Bild kann nicht gelesen werden.'));};
+      img.src=url;};
+    document.body.appendChild(i);i.click();
+  });
+}
+function zoom(src){const o=el('div','overlay',`<img src="${src}">`);o.onclick=()=>o.remove();document.body.appendChild(o);}
+function photoBlock(getObj,onChange){ // getObj(): Objekt mit .photo
+  const box=el('div','photo');
+  function draw(){const ph=getObj().photo;box.innerHTML='';
+    if(ph){const im=el('img');im.src=ph.src;im.onclick=()=>zoom(ph.src);box.appendChild(im);box.appendChild(el('span','pt','✅ Foto vom '+HB.deDate(ph.t)));}
+    const b=el('button','btn '+(ph?'sec':'yellow'),ph?'📷 Neues Foto':'📷 Foto machen');
+    b.onclick=async()=>{try{const r=await takePhoto();if(!r)return;getObj().photo=r;save();draw();onChange&&onChange();}
+      catch(e){toast('❌ '+e.message,5000);}};
+    box.appendChild(b);}
+  draw();return box;
+}
+function esc(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function fresh(){return {app:'hebel-exp',created:new Date().toISOString(),name:'',klasse:'',partner:'',datum:new Date().toLocaleDateString('de-DE'),
+  prep:{m:'',F:'',Fok:false,Fval:null,Fwrong:0,d:'',level:null},q:{},rows:{},obs:{A:'',B:'',C:''},D:{guess:null,Fs:'',Fa:''},
+  reasons:{sel:[],done:false,wrong:0},texts:{t1:'',t2:''},cloze:{vals:EXP.cloze.map(()=>''),done:false,wrong:0},teacher:{comment:'',grade:'',log:[]},page:'p0'};}
+let state;
+try{state=JSON.parse(localStorage.getItem(KEY));}catch(e){}
+if(!state||state.app!=='hebel-exp')state=fresh();
+function save(){state.updated=new Date().toISOString();try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){toast('⚠️ Der Speicher ist voll. Klicke jetzt auf „💾 Speichern“, damit nichts verloren geht!',7000);}updateHeader();}
+
+/* ---------- Navigation ---------- */
+const PAGES=[['p0','Start'],['p1','1 Vorbereitung'],['p2','2 Theorie'],['p3','A'],['p4','B'],['p5','C'],['p6','D'],['p7','Auswertung'],['p8','📤 Abgabe']];
+function pageDone(id){
+  const s=state,p=s.prep,rowsDone=g=>EXP.groups.find(x=>x.key===g).rows.every(r=>{const x=s.rows[r.id]||{};return (x.ok||x.revealed)&&!!x.photo&&!isNaN(parseNum(x.meas));});
+  switch(id){
+    case 'p0':return !!s.name.trim();
+    case 'p1':return p.Fok&&parseNum(p.d)>0&&!!p.level;
+    case 'p2':return ['th1','th2'].every(i=>s.q[i]&&s.q[i].done);
+    case 'p3':return rowsDone('A');case 'p4':return rowsDone('B');case 'p5':return rowsDone('C');
+    case 'p6':return !!(s.q.dex&&s.q.dex.done)&&!!s.D.photo;
+    case 'p7':return s.reasons.done&&s.cloze.done&&s.texts.t1.trim().length>10&&s.texts.t2.trim().length>10;
+  }return false;
+}
+function renderNav(){const n=$('nav');n.innerHTML='';PAGES.forEach(([id,l])=>{const b=el('button','tab'+(state.page===id?' active':'')+(pageDone(id)?' done':''),l);b.onclick=()=>go(id);n.appendChild(b);});}
+function go(id){state.page=id;save();document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));renderNav();
+  if(id==='p7')renderSummary();if(id==='p8')renderFinal();window.scrollTo(0,0);}
+document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+function updateHeader(){const p=HB.expProgress(state),w=HB.expWrong(state);$('hProg').textContent='✅ '+p.pct+' %';$('hWrong').textContent='❌ '+w.total+' Fehlversuche';renderNav();}
+
+/* ---------- Speichern / Laden ---------- */
+async function saveEnc(){
+  if(!state.name.trim()){toast('Bitte trage zuerst auf der Startseite deinen Namen ein.');go('p0');return;}
+  try{await HB.saveFile('hebel-exp',state,`Hebel-Versuch_${HB.safeName(state.name)}_${HB.today()}.hebel`);toast('💾 Gespeichert! Die Datei ist in „Downloads“.');}
+  catch(e){toast('Fehler: '+e.message,6000);}
+}
+async function loadEnc(){
+  const fs=await HB.pickFiles(false);if(!fs.length)return;
+  try{const r=await HB.decrypt(fs[0].text);
+    if(r.app!=='hebel-exp'){toast('Das ist keine Datei vom Experiment. (Diese Datei gehört zur Lernseite.)',6000);return;}
+    localStorage.setItem(KEY,JSON.stringify(r.data));location.reload();
+  }catch(e){toast('❌ '+e.message,6000);}
+}
+$('hSave').onclick=saveEnc;$('saveBtn2').onclick=saveEnc;$('hLoad').onclick=loadEnc;
+
+/* ---------- Start ---------- */
+[['inName','name'],['inKlasse','klasse'],['inPartner','partner'],['inDatum','datum']].forEach(([i,k])=>{$(i).value=state[k]||'';$(i).oninput=e=>{state[k]=e.target.value;save();};});
+
+/* ---------- Vorbereitung ---------- */
+function predsStarted(){return Object.values(state.rows).some(x=>x.ok||x.revealed||x.wrong>0);}
+function initPrep(){
+  const p=state.prep;$('pm').value=p.m;$('pF').value=p.F;$('pd').value=p.d;
+  $('pm').oninput=e=>{p.m=e.target.value;if(p.Fok){p.Fok=false;p.Fval=null;$('pFfb').textContent='';}save();};
+  $('pF').oninput=e=>{p.F=e.target.value;if(p.Fok){p.Fok=false;p.Fval=null;$('pFfb').textContent='';}save();};
+  $('pd').oninput=e=>{p.d=e.target.value;save();};
+  $('pFchk').onclick=()=>{
+    const m=parseNum(p.m),F=parseNum(p.F),fb=$('pFfb');
+    if(!(m>0)){fb.className='fb no';fb.textContent='Schreibe zuerst die Masse m in g.';return;}
+    if(isNaN(F)){fb.className='fb no';fb.textContent='Schreibe eine Zahl für F.';return;}
+    const a=m/100,b=m*0.00981,ok=Math.abs(F-a)<=Math.max(0.006,a*0.02)||Math.abs(F-b)<=Math.max(0.006,b*0.02);
+    if(ok){p.Fok=true;p.Fval=F;fb.className='fb ok';fb.innerHTML=`✅ Richtig! Ein Massestück: F = ${fmt(F,3)} N`;}
+    else{p.Fwrong++;fb.className='fb no';fb.innerHTML=`❌ Leider falsch (Versuch ${p.Fwrong}). Tipp: F = ${fmt(m)} g : 100 = ?`;}
+    save();lockPrep();
+  };
+  if(p.Fok){$('pFfb').className='fb ok';$('pFfb').innerHTML=`✅ Richtig! Ein Massestück: F = ${fmt(p.Fval,3)} N`;}
+  document.querySelectorAll('#levelOpts .opt').forEach(b=>{b.onclick=()=>{p.level=b.dataset.v;save();markLevel();};});
+  markLevel();lockPrep();
+}
+function markLevel(){document.querySelectorAll('#levelOpts .opt').forEach(b=>b.classList.toggle('sel',b.dataset.v===state.prep.level));}
+function lockPrep(){const l=predsStarted()&&state.prep.Fok;['pm','pF','pd'].forEach(i=>$(i).disabled=l);$('pFchk').disabled=l||state.prep.Fok;
+  $('prepLock').innerHTML=l?'<div class="note">🔒 Diese Werte sind jetzt fest, weil du schon Vorhersagen gemacht hast.</div>':'';}
+function ready(){return state.prep.Fok&&parseNum(state.prep.d)>0;}
+
+/* ---------- Multiple Choice ---------- */
+function makeMC(parent,cfg){
+  const st=state.q[cfg.id]||(state.q[cfg.id]={done:false,wrong:0,chosen:[]});
+  const box=el('div','q',`<div class="qhead">${cfg.q}</div><div class="opts"></div><div class="fb"></div>`);
+  const oe=box.querySelector('.opts'),fb=box.querySelector('.fb');
+  const btns=cfg.opts.map((t,i)=>{const b=el('button','opt',t);b.onclick=()=>pick(i);oe.appendChild(b);return b;});
+  function pick(i){if(st.done)return;st.chosen.push(i);
+    if(i===cfg.c){st.done=true;btns[i].classList.add('right');btns.forEach(b=>b.disabled=true);fb.className='fb ok';fb.innerHTML='✅ Richtig! '+(cfg.explain||'');}
+    else{st.wrong++;btns[i].classList.add('wrong');btns[i].disabled=true;fb.className='fb no';fb.innerHTML='❌ Leider falsch. Versuch es nochmal!';}
+    save();if(cfg.after)cfg.after();}
+  st.chosen.forEach(i=>{btns[i].classList.add(i===cfg.c?'right':'wrong');btns[i].disabled=true;});
+  if(st.done){btns.forEach(b=>b.disabled=true);fb.className='fb ok';fb.innerHTML='✅ Richtig! '+(cfg.explain||'');}
+  parent.appendChild(box);
+}
+function initTheory(){
+  const b=$('thBox');b.innerHTML='<p>Beantworte die Fragen <b>bevor</b> du misst.</p>';
+  makeMC(b,Object.assign({},EXP.th[0],{explain:'Das ist das Hebelgesetz: F₁ · r₁ = F₂ · r₂.'}));
+  makeMC(b,Object.assign({},EXP.th[1],{explain:'Doppelte Kraft → halber Abstand. Dann bleibt F · r gleich.'}));
+}
+
+/* ---------- Hebel-Skizze ---------- */
+function leverFig(spec){ // spec: {L:[[n,l]], R:[[n,l|null]], KM, angle}
+  const cx=240,cy=40,sp=20;
+  let s=`<svg viewBox="0 0 480 ${spec.KM?190:175}" style="max-width:520px">`;
+  s+=`<line x1="${cx}" y1="${cy}" x2="${cx}" y2="175" stroke="#9aa3b2" stroke-width="6"/>`;
+  s+=`<rect x="${cx-215}" y="${cy-8}" width="430" height="16" rx="3" fill="#f6d55c" stroke="#a37b00"/>`;
+  for(let i=1;i<=10;i++)[-1,1].forEach(sd=>{s+=`<circle cx="${cx+sd*i*sp}" cy="${cy}" r="3" fill="#666"/><text x="${cx+sd*i*sp}" y="${cy-12}" font-size="10" text-anchor="middle" fill="#475569">${i}</text>`;});
+  s+=`<circle cx="${cx}" cy="${cy}" r="11" fill="#e8f5e9" stroke="#555"/><circle cx="${cx}" cy="${cy}" r="3" fill="#555"/>`;
+  const stack=(x,n,label,q,top)=>{let y=top===undefined?cy+16:top;let t=top===undefined?`<line x1="${x}" y1="${cy}" x2="${x}" y2="${cy+16}" stroke="#222" stroke-width="2"/>`:'';
+    for(let m=0;m<n;m++){t+=`<rect x="${x-13}" y="${y}" width="26" height="9" rx="2" fill="${q?'#fff':'#222'}" stroke="${q?'#dc2626':'none'}" stroke-dasharray="3 2" stroke-width="1.5"/>`;y+=11;}
+    return t+`<text x="${x}" y="${y+14}" font-size="13" text-anchor="middle" font-weight="700" fill="${q?'#dc2626':'#111'}">${label}</text>`;};
+  (spec.L||[]).forEach(([n,l])=>{s+=stack(cx-l*sp,n,n+'×');});
+  (spec.R||[]).forEach(([n,l])=>{
+    if(l===null){const x=cx+150;s+=`<text x="${x}" y="${cy+36}" font-size="13" text-anchor="middle" fill="#dc2626" font-weight="700">Loch ?</text>`+stack(x,n,n+'×',true,cy+44);}
+    else s+=stack(cx+l*sp,n,n+'×');});
+  if(spec.KM){const x=cx+spec.KM*sp,a=(spec.angle||0)*Math.PI/180,dx=Math.sin(a)*70,dy=Math.cos(a)*70;
+    s+=`<line x1="${x}" y1="${cy}" x2="${x+dx}" y2="${cy+dy}" stroke="#2563eb" stroke-width="3"/>`;
+    s+=`<g transform="rotate(${-(spec.angle||0)} ${x+dx} ${cy+dy})"><rect x="${x+dx-9}" y="${cy+dy}" width="18" height="60" rx="5" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/><line x1="${x+dx}" y1="${cy+dy+60}" x2="${x+dx}" y2="${cy+dy+78}" stroke="#2563eb" stroke-width="3"/></g>`;
+    s+=`<text x="${x+dx+16}" y="${cy+dy+40}" font-size="13" fill="#2563eb" font-weight="700">${spec.kmLabel||'F₂ = ?'}</text>`;}
+  return s+'</svg>';
+}
+
+/* ---------- Versuche A–C ---------- */
+const HINT={r:'Rechne zuerst das Drehmoment links aus: M = F · r (r = Loch-Nr. · d). Dann: r₂ = M : F₂ (F₂ = Kraft rechts).',
+            F:'M links = F₁ · r₁. Dann: F₂ = M : r₂ (r₂ = Loch-Nr. des Kraftmessers · d).'};
+function rowState(id){return state.rows[id]||(state.rows[id]={pred:'',ok:false,wrong:0,revealed:false,meas:''});}
+function buildGroup(g){
+  const box=$('g'+g.key);
+  box.innerHTML=`<h2>${g.title}</h2><div class="card"><p>${g.intro}</p>
+    <ol class="steps"><li><b>Vorhersage:</b> Rechne und klicke „Prüfen“.</li><li><b>Experiment:</b> Baue auf und mach ein <b>📷 Foto</b>.</li><li><b>Messung:</b> Schreibe den Messwert auf.</li><li>Vergleiche.</li></ol>
+    ${g.kind==='F'?'<div class="warn">⚠️ Stelle den Kraftmesser vorher auf <b>Null</b> (so, wie du ihn hältst: nach unten). Ziehe <b>senkrecht</b>.</div>':''}
+    ${g.key==='A'?'<div class="note">💡 Was machst du, wenn das richtige Loch nicht existiert? Probiere die Löcher daneben und schreibe auf, was du beobachtest.</div>':''}
+    <div class="needprep warn hidden">⚠️ Mache zuerst die <b>Vorbereitung</b> (Kraft F und Lochabstand d).</div></div>`;
+  g.rows.forEach(r0=>{const r=EXP.row(r0.id);box.appendChild(rowCard(r));});
+  const ob=el('div','card',`<h3>Beobachtungen zu Versuch ${g.key}</h3><p style="font-size:16px">Was ist dir aufgefallen? War etwas schwierig?</p><textarea placeholder="Optional: Schreibe hier deine Beobachtungen …"></textarea>`);
+  const ta=ob.querySelector('textarea');ta.value=state.obs[g.key]||'';ta.oninput=()=>{state.obs[g.key]=ta.value;save();};
+  box.appendChild(ob);
+}
+function rowCard(r){
+  const st=rowState(r.id),sym=HB.predSym(r),u=HB.predUnit(r),s=HB.setupText(r);
+  const c=el('div','exp');
+  const spec=r.kind==='F'?{L:r.L,KM:r.KM}:{L:r.L,R:r.R};
+  c.innerHTML=`<h4>${r.id}</h4>${leverFig(spec)}<div><b>${s.left}</b> &nbsp;|&nbsp; <b>${s.right}</b></div>
+   <div class="row"><span class="lbl">Vorhersage:</span>${sym} = <input class="num pred" inputmode="decimal"><b>${u}</b><button class="btn chk">Prüfen</button><button class="btn sec rev hidden">Lösung zeigen</button></div>
+   <div class="fb pfb"></div>
+   <div class="row"><span class="lbl">Foto:</span><span style="font-size:15.5px">Mach ein Foto von deinem Aufbau <b>im Gleichgewicht</b>${r.kind==='F'?' – man muss die Anzeige vom Kraftmesser sehen':''}.</span></div>
+   <div class="phslot"></div>
+   <div class="row"><span class="lbl">Messung:</span>${sym} = <input class="num meas" inputmode="decimal"><b>${u}</b><span class="mhint" style="font-size:15px;color:var(--muted)"></span></div>
+   <div class="resbox"></div>`;
+  const phs=c.querySelector('.phslot'),pi=c.querySelector('.pred'),chk=c.querySelector('.chk'),rev=c.querySelector('.rev'),pfb=c.querySelector('.pfb'),mi=c.querySelector('.meas'),mh=c.querySelector('.mhint'),rb=c.querySelector('.resbox');
+  pi.value=st.pred;mi.value=st.meas;
+  function refresh(){
+    const done=st.ok||st.revealed;pi.disabled=done;chk.disabled=done;if(done)rev.classList.add('hidden');else if(st.wrong>=3)rev.classList.remove('hidden');
+    phs.classList.toggle('hidden',!done);
+    mi.disabled=!done||!st.photo;mh.textContent=!done?' (erst nach der Vorhersage)':(!st.photo?' (erst nach dem Foto)':'');
+    const p=state.prep,F=p.Fval,d=parseNum(p.d),ans=HB.predict(r,F,d);
+    if(st.ok){pfb.className='fb pfb ok';pfb.innerHTML=`✅ Richtig! ${HB.solText(r,F,d)}`;}
+    else if(st.revealed){pfb.className='fb pfb no';pfb.innerHTML=`👀 Lösung: ${HB.solText(r,F,d)}`;}
+    const R=HB.expRowResult(state,r);
+    if(done&&!isNaN(R.meas)){const cl=HB.devClass(R.pct),diff=R.meas-R.pred;
+      rb.innerHTML=`<div class="res ${cl}">Vorhersage ${fmt(R.pred)} ${u} · Messung ${fmt(R.meas)} ${u} → Abweichung ${diff>0?'+':''}${fmt(diff)} ${u} (${R.pct>0?'+':''}${fmt(R.pct,0)} %): <b>${HB.devWord(R.pct)}</b></div>`;}
+    else rb.innerHTML='';
+    c.classList.toggle('complete',done&&!!st.photo&&!isNaN(R.meas));
+  }
+  chk.onclick=()=>{
+    if(!ready()){toast('Mache zuerst die Vorbereitung: Kraft F prüfen und Lochabstand d messen.');go('p1');return;}
+    const v=parseNum(pi.value);if(isNaN(v)){pfb.className='fb pfb no';pfb.textContent='Bitte schreibe eine Zahl.';return;}
+    st.pred=pi.value;const ans=HB.predict(r,state.prep.Fval,parseNum(state.prep.d));
+    if(Math.abs(v-ans)<=Math.max(0.011,Math.abs(ans)*0.03)){st.ok=true;}
+    else{st.wrong++;pfb.className='fb pfb no';pfb.innerHTML=`❌ Leider falsch (Versuch ${st.wrong}).<br>💡 Tipp: ${HINT[r.kind]}`;}
+    save();lockPrep();refresh();
+  };
+  pi.addEventListener('keydown',e=>{if(e.key==='Enter')chk.click();});
+  rev.onclick=()=>{st.revealed=true;save();refresh();};
+  mi.oninput=()=>{st.meas=mi.value;save();refresh();};
+  phs.appendChild(photoBlock(()=>st,()=>refresh()));
+  c._refresh=refresh;refresh();
+  return c;
+}
+function refreshAllRows(){document.querySelectorAll('.exp').forEach(c=>c._refresh&&c._refresh());document.querySelectorAll('.needprep').forEach(n=>n.classList.toggle('hidden',ready()));}
+
+/* ---------- Versuch D ---------- */
+function initD(){
+  const D=state.D,G=['größer','kleiner','gleich groß'];
+  $('figD').innerHTML=leverFig({L:[[2,4]],KM:4,angle:35,kmLabel:'schräg'});
+  const gb=$('dGuess');gb.innerHTML='';
+  G.forEach((t,i)=>{const b=el('button','opt',t);b.onclick=()=>{if(locked())return;D.guess=i;save();upd();};gb.appendChild(b);});
+  const locked=()=>!isNaN(parseNum(D.Fs))||!isNaN(parseNum(D.Fa));
+  $('dFs').value=D.Fs;$('dFa').value=D.Fa;
+  $('dFs').oninput=e=>{D.Fs=e.target.value;save();upd();};$('dFa').oninput=e=>{D.Fa=e.target.value;save();upd();};
+  $('dPhoto').appendChild(photoBlock(()=>D,()=>upd()));
+  function upd(){
+    $('dFs').disabled=$('dFa').disabled=!D.photo;
+    [...gb.children].forEach((b,i)=>{b.classList.toggle('sel',D.guess===i);b.disabled=locked()&&D.guess!==i;});
+    $('dMeasBox').classList.toggle('hidden',D.guess===null);
+    const fs=parseNum(D.Fs),fa=parseNum(D.Fa);let h='';
+    if(!isNaN(fs)&&ready()){const exp=2*state.prep.Fval;h+=`<p>Erwartung senkrecht (Hebelgesetz): F = 2 · ${fmt(state.prep.Fval,3)} N · 4d : 4d = <b>${fmt(exp)} N</b>. Gemessen: <b>${fmt(fs)} N</b>.</p>`;}
+    if(!isNaN(fs)&&!isNaN(fa)){const real=Math.abs(fa-fs)<=0.05*fs?2:(fa>fs?0:1);
+      h+=`<div class="res ${real===D.guess?'good':'mid'}">Schräg ist die Kraft <b>${G[real]}</b>. ${real===D.guess?'Deine Vorhersage war richtig! 🎉':'Deine Vorhersage war nicht richtig. Das ist ok – dafür macht man Experimente!'}</div>`;}
+    $('dRes').innerHTML=h;
+    $('dExpl').classList.toggle('hidden',isNaN(fs)||isNaN(fa));
+  }
+  makeMC($('dExpl'),Object.assign({},EXP.th[2],{explain:'Nur der Teil der Kraft, der senkrecht zum Hebel zieht, dreht den Hebel.'}));
+  upd();
+}
+
+/* ---------- Auswertung ---------- */
+function renderSummary(){
+  let t='<table><tr><th>Nr.</th><th>Vorhersage</th><th>Messung</th><th>Abweichung</th></tr>';
+  EXP.rows.forEach(r=>{const R=HB.expRowResult(state,r),u=HB.predUnit(r),x=R.x,dn=x.ok||x.revealed;
+    t+=`<tr><td><b>${r.id}</b></td><td>${dn?fmt(R.pred)+' '+u:'–'}</td><td>${isNaN(R.meas)?'–':fmt(R.meas)+' '+u}</td><td class="${HB.devClass(R.pct)}">${isNaN(R.pct)?'–':(R.pct>0?'+':'')+fmt(R.pct,0)+' %'}</td></tr>`;});
+  $('sumTable').innerHTML=t+'</table>';
+  // Diagramm
+  const W=640,H=230,x0=50,y0=15,w=W-60,h=170,max=1.6,yOf=v=>y0+h-Math.min(v,max)/max*h,bw=w/EXP.rows.length;
+  let s=`<svg viewBox="0 0 ${W} ${H}"><rect x="${x0}" y="${yOf(1.1)}" width="${w}" height="${yOf(0.9)-yOf(1.1)}" fill="#dcfce7"/>`;
+  [0,0.5,1,1.5].forEach(v=>{s+=`<line x1="${x0}" y1="${yOf(v)}" x2="${x0+w}" y2="${yOf(v)}" stroke="${v===1?'#16a34a':'#e2e8f0'}" stroke-width="${v===1?2:1}"/><text x="${x0-6}" y="${yOf(v)+4}" font-size="11" text-anchor="end" fill="#64748b">${v*100} %</text>`;});
+  EXP.rows.forEach((r,i)=>{const R=HB.expRowResult(state,r),bx=x0+i*bw+bw*.2;
+    if(!isNaN(R.ratio)){const c={good:'#16a34a',mid:'#ea800c',bad:'#dc2626'}[HB.devClass(R.pct)];s+=`<rect x="${bx}" y="${yOf(R.ratio)}" width="${bw*.6}" height="${y0+h-yOf(R.ratio)}" fill="${c}" rx="3"/><text x="${bx+bw*.3}" y="${yOf(R.ratio)-4}" font-size="11" text-anchor="middle">${fmt(R.ratio*100,0)}%</text>`;}
+    s+=`<text x="${bx+bw*.3}" y="${y0+h+16}" font-size="13" text-anchor="middle" font-weight="700">${r.id}</text>`;});
+  $('chart').innerHTML=s+`<line x1="${x0}" y1="${y0+h}" x2="${x0+w}" y2="${y0+h}" stroke="#334155"/></svg>`;
+}
+function initReasons(){
+  const R=state.reasons,box=$('reasons');box.innerHTML='';
+  EXP.reasons.forEach(r=>{const l=el('label','check',`<input type="checkbox" value="${r.id}"><span>${r.t}</span>`);const cb=l.querySelector('input');
+    cb.checked=R.sel.includes(r.id);cb.disabled=R.done;cb.onchange=()=>{R.sel=[...box.querySelectorAll('input:checked')].map(i=>i.value);box.querySelectorAll('.check').forEach(c=>c.classList.remove('bad'));save();};box.appendChild(l);});
+  const fb=$('reasonFb');
+  function showDone(){fb.className='fb ok';fb.innerHTML='✅ Gut! Diese Gründe sind alle möglich.';$('reasonChk').disabled=true;box.querySelectorAll('input').forEach(i=>i.disabled=true);
+    box.querySelectorAll('.check').forEach(c=>{if(c.querySelector('input').checked)c.classList.add('okc');});}
+  $('reasonChk').onclick=()=>{
+    const bad=R.sel.filter(id=>!EXP.reasons.find(r=>r.id===id).ok);
+    if(bad.length){R.wrong++;fb.className='fb no';fb.innerHTML=`❌ ${bad.length===1?'Ein Grund ist':bad.length+' Gründe sind'} nicht richtig (rot). Nimm ${bad.length===1?'ihn':'sie'} weg.`;
+      box.querySelectorAll('.check').forEach(c=>{if(bad.includes(c.querySelector('input').value))c.classList.add('bad');});}
+    else if(R.sel.length<3){fb.className='fb no';fb.textContent='Wähle mindestens 3 Gründe.';}
+    else{R.done=true;showDone();}
+    save();
+  };
+  if(R.done)showDone();
+}
+function initTexts(){
+  const S={t1:['Die größte Abweichung war bei Versuch … .','Die Vorhersage war …, aber wir haben … gemessen.','Ich glaube, der Grund ist …','Das richtige Loch gab es nicht, weil …'],
+           t2:['Man sollte …','Wir könnten …','Es ist wichtig, dass …','Man kann mehrmals messen und …']};
+  ['t1','t2'].forEach(k=>{const ta=$(k);ta.value=state.texts[k]||'';ta.oninput=()=>{state.texts[k]=ta.value;save();};
+    const sb=$('s'+k);sb.innerHTML='';S[k].forEach(t=>{const sp=el('span','starter',t);sp.onclick=()=>{ta.value=(ta.value.trim()?ta.value.trim()+' ':'')+t.replace(/…\s*\.?$/,'').replace('… .','');state.texts[k]=ta.value;save();ta.focus();};sb.appendChild(sp);});});
+}
+function initCloze(){
+  const C=state.cloze,box=$('cloze');box.innerHTML='';
+  EXP.cloze.forEach((c,i)=>{const sp=el('span','',`${c.pre} `);const sel=el('select');sel.innerHTML='<option value="">…</option>'+c.opts.map(o=>`<option>${o}</option>`).join('');
+    sel.value=C.vals[i]||'';sel.disabled=C.done;sel.onchange=()=>{C.vals[i]=sel.value;sel.className='';save();};sp.appendChild(sel);sp.append(` ${c.post} `);box.appendChild(sp);});
+  const fb=$('clozeFb'),sels=()=>[...box.querySelectorAll('select')];
+  function showDone(){fb.className='fb ok';fb.textContent='✅ Richtig! Super.';$('clozeChk').disabled=true;sels().forEach(s=>{s.disabled=true;s.className='okc';});}
+  $('clozeChk').onclick=()=>{
+    if(C.vals.some(v=>!v)){fb.className='fb no';fb.textContent='Fülle alle Lücken aus.';return;}
+    let wrong=0;sels().forEach((s,i)=>{const ok=C.vals[i]===EXP.cloze[i].ans;s.className=ok?'okc':'bad';if(!ok)wrong++;});
+    if(wrong){C.wrong++;fb.className='fb no';fb.textContent=`❌ ${wrong} Lücke(n) falsch (rot). Versuch es nochmal!`;}else{C.done=true;showDone();}
+    save();
+  };
+  if(C.done)showDone();
+}
+
+/* ---------- Abgabe ---------- */
+function renderFinal(){
+  const p=HB.expProgress(state),w=HB.expWrong(state);
+  const miss=PAGES.filter(([id])=>id!=='p8'&&!pageDone(id)).map(([id,l])=>`<li><a href="#" data-p="${id}">${l}</a></li>`).join('');
+  $('finalBox').innerHTML=`<h3>${esc(state.name)||'⚠️ Kein Name!'} ${state.klasse?'('+esc(state.klasse)+')':''}</h3>
+    <p>Bearbeitet: <b>${p.pct} %</b> &nbsp;·&nbsp; Fehlversuche: <b>${w.total}</b></p>
+    ${miss?`<div class="warn">Noch nicht fertig:<ul class="missing">${miss}</ul>Du kannst trotzdem ein PDF erstellen.</div>`:'<div class="note">🎉 Alles fertig! Erstelle jetzt dein PDF.</div>'}
+    ${state.teacher&&state.teacher.comment?`<div class="note"><b>Kommentar vom Lehrer:</b> ${esc(state.teacher.comment)}</div>`:''}`;
+  $('finalBox').querySelectorAll('[data-p]').forEach(a=>a.onclick=e=>{e.preventDefault();go(a.dataset.p);});
+}
+$('mkPdf').onclick=()=>{
+  if(!state.name.trim()){toast('Bitte trage zuerst auf der Startseite deinen Namen ein.');go('p0');return;}
+  try{const blob=HB.buildExpPDF(state);HB.download(blob,`Hebel-Protokoll_${HB.safeName(state.name)}.pdf`);toast('📄 PDF erstellt! Es ist in „Downloads“.');}
+  catch(e){console.error(e);toast('Fehler beim PDF: '+e.message,6000);}
+};
+let resetArm=false;
+$('resetBtn').onclick=()=>{if(!resetArm){resetArm=true;$('resetBtn').textContent='⚠️ Wirklich alles löschen? Nochmal klicken!';setTimeout(()=>{resetArm=false;$('resetBtn').textContent='🔄 Alles löschen und neu beginnen';},4000);return;}
+  try{localStorage.removeItem(KEY);}catch(e){}location.reload();};
+
+/* ---------- Start ---------- */
+initPrep();initTheory();EXP.groups.forEach(buildGroup);initD();initReasons();initTexts();initCloze();
+$('pd').addEventListener('input',refreshAllRows);$('pFchk').addEventListener('click',refreshAllRows);
+refreshAllRows();updateHeader();go(state.page||'p0');
+</script>
+</body>
+</html>
