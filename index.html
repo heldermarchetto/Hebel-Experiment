@@ -73,6 +73,23 @@ td.good{background:#dcfce7}td.mid{background:#ffedd5}td.bad{background:#fee2e2}
 .photo .pt{font-size:14px;color:var(--muted)}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;display:flex;align-items:center;justify-content:center;cursor:zoom-out}
 .overlay img{max-width:95vw;max-height:92vh;border-radius:8px}
+/* online speichern */
+.cstat{font-size:14px;font-weight:700;padding:5px 10px;border-radius:10px;background:#334155;color:#e2e8f0;white-space:nowrap}
+.cstat:empty{display:none}
+.cstat.ok{color:#86efac}.cstat.busy,.cstat.foto{color:#fde68a}.cstat.off{color:#fca5a5}
+.fs-ov{position:fixed;inset:0;background:rgba(15,23,42,.75);display:flex;align-items:flex-start;justify-content:center;z-index:400;padding:40px 16px;overflow:auto}
+.fs-box{background:#fff;border-radius:20px;padding:22px 24px;max-width:420px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.fs-box h2{margin:.1em 0 .3em;font-size:27px}
+.fs-sub{font-size:15px;color:var(--muted);font-weight:400}
+.fs-box label{display:block;font-weight:700;margin:12px 0 4px}
+.fs-box input{font:inherit;font-size:22px;width:100%;border:2px solid #cbd5e1;border-radius:12px;padding:10px 12px}
+.fs-box input:focus{outline:none;border-color:var(--accent2)}
+.fs-box .go{margin-top:16px;width:100%;font-size:20px;padding:12px;border-radius:12px;border:0;background:var(--ok);color:#fff;font-weight:800;cursor:pointer}
+.fs-box .go:disabled{opacity:.5}
+.fs-msg{margin-top:12px;font-weight:600;border-radius:10px;padding:8px 10px;display:none;font-size:16px}
+.fs-msg.bad{display:block;background:#fee2e2;color:#9b1c1c}
+.fs-msg.info{display:block;background:#eef2ff;color:#3730a3}
+.phwait{display:inline-block;width:160px;height:110px;border-radius:8px;border:2px dashed #86efac;background:#f0fdf4;color:var(--muted);font-size:14px;display:flex;align-items:center;justify-content:center;text-align:center;padding:6px}
 </style>
 </head>
 <body>
@@ -82,8 +99,10 @@ td.good{background:#dcfce7}td.mid{background:#ffedd5}td.bad{background:#fee2e2}
   <div class="hright">
     <span class="chip prog" id="hProg">0 %</span>
     <span class="chip wr" id="hWrong">❌ 0</span>
+    <span class="cstat" id="cloudStatus"></span>
     <button class="hbtn" id="hSave">💾 Speichern</button>
     <button class="hbtn" id="hLoad">📂 Laden</button>
+    <button class="hbtn hidden" id="hOut">🚪 Abmelden</button>
   </div>
 </header>
 <nav id="nav"></nav>
@@ -103,7 +122,8 @@ td.good{background:#dcfce7}td.mid{background:#ffedd5}td.bad{background:#fee2e2}
       <li><b>Vergleich:</b> Passt die Messung zur Vorhersage? Warum (nicht)?</li>
     </ol>
     <p>Am Ende erstellst du ein <b>PDF-Protokoll</b> und schickst es deinem Lehrer.</p>
-    <div class="warn">💾 <b>Wichtig:</b> Klicke oben auf <b>„Speichern“</b>, wenn du eine Pause machst. Dann bekommst du eine Datei. Mit <b>„Laden“</b> kannst du später weiterarbeiten – auch auf einem anderen Gerät.</div>
+    <div class="note hidden" id="cloudInfo">☁️ Du bist angemeldet. Alles wird <b>automatisch gespeichert</b> – auch deine Fotos. Oben siehst du: <b>☁️ Gespeichert</b>. Du kannst auf jedem iPad weitermachen. Am Ende der Stunde: oben auf <b>🚪 Abmelden</b> klicken. <span class="en">(automatisch = automatically · abmelden = log out)</span></div>
+    <div class="warn" id="fileInfo">💾 <b>Wichtig:</b> Klicke oben auf <b>„Speichern“</b>, wenn du eine Pause machst. Dann bekommst du eine Datei. Mit <b>„Laden“</b> kannst du später weiterarbeiten – auch auf einem anderen Gerät.</div>
   </div>
   <div class="card">
     <h3>Wer seid ihr?</h3>
@@ -229,8 +249,9 @@ td.good{background:#dcfce7}td.mid{background:#ffedd5}td.bad{background:#fee2e2}
     <h3>So gibst du ab</h3>
     <ol>
       <li>Klicke auf <b>„📄 PDF erstellen“</b>. Das PDF wird heruntergeladen (iPad: in der App <b>Dateien → Downloads</b>).</li>
-      <li>Klicke auf <b>„💾 Datei speichern“</b>. Das ist deine Arbeitsdatei.</li>
-      <li>Lade <b>beide Dateien</b> in Google Classroom hoch.</li>
+      <li class="fileOnly">Klicke auf <b>„💾 Datei speichern“</b>. Das ist deine Arbeitsdatei.</li>
+      <li class="fileOnly">Lade <b>beide Dateien</b> in Google Classroom hoch.</li>
+      <li class="cloudOnly hidden">Lade das <b>PDF</b> in Google Classroom hoch. Deine Arbeit ist schon automatisch gespeichert ☁️.</li>
     </ol>
     <div class="row">
       <button class="btn yellow" id="mkPdf">📄 PDF erstellen</button>
@@ -701,7 +722,7 @@ function buildExpPDF(st) {
   const cols = 3, gapX = 10, cwid = (pdf.cw - gapX * (cols - 1)) / cols, maxH = 135;
   for (let i = 0; i < ph.length; i += cols) {
     const rowItems = ph.slice(i, i + cols);
-    const hs = rowItems.map(p => p.photo ? Math.min(maxH, cwid * p.photo.h / p.photo.w) : 40);
+    const hs = rowItems.map(p => (p.photo && p.photo.src) ? Math.min(maxH, cwid * p.photo.h / p.photo.w) : 40);
     const rh = Math.max(...hs) + 26;
     pdf.ensure(rh);
     rowItems.forEach((p, k) => {
@@ -709,7 +730,7 @@ function buildExpPDF(st) {
       let cap = p.id;
       if (p.r) { const R = expRowResult(st, p.r); if (!isNaN(R.meas)) cap += ' – Messung: ' + fmt(R.meas) + ' ' + predUnit(p.r); }
       else { const D = st.D || {}; cap += ' – schräg: ' + (D.Fa || '–') + ' N'; }
-      if (p.photo) {
+      if (p.photo && p.photo.src) {
         let w = cwid, h = cwid * p.photo.h / p.photo.w; if (h > maxH) { h = maxH; w = maxH * p.photo.w / p.photo.h; }
         pdf.drawImage(pdf.addImage(p.photo.src, p.photo.w, p.photo.h), x, pdf.y, w, h);
         pdf.rect(x, pdf.y, w, h, { stroke: [190, 198, 212] });
@@ -740,6 +761,174 @@ global.HB = { encrypt, decrypt, saveFile, download, pickFiles, safeName, today, 
 
 </script>
 <script>
+/* ================= ☁️ Online speichern (Google Sheets + Drive) – Version 2 =================
+   Gleicher Baustein für alle Übungsseiten. Die Seite liefert:
+     app, titel, getState(), setState(st|null), getSummary(), onLogin(info), hasProgress()
+     optional: photos() → [{key, ph}]  (ph = {src, w, h, t, fid}),  onPhotos()
+   Server-Adresse: Link-Parameter ?s=<ID>  (oder STANDARD_ID unten eintragen).
+   Ohne Server-ID arbeitet die Seite wie früher nur auf dem Gerät.                           */
+const Cloud=(function(){
+  const STANDARD_ID='';           // optional: ID aus der Web-App-URL …/macros/s/<ID>/exec
+  const LOGIN_KEY='fs-login';
+  const TXT={ok:'☁️ Gespeichert',busy:'⏳ Speichert …',foto:'⏳ Foto wird hochgeladen …',off:'⚠️ Offline – wird später gespeichert',lokal:'💾 Nur auf diesem Gerät'};
+  const ERR={login:'Benutzername oder PIN ist falsch. Versuche es noch einmal.',
+    gesperrt:'Zu viele falsche Versuche. Warte 10 Minuten oder frag deine Lehrerin / deinen Lehrer.',
+    klasse:'Diese Seite ist für deine Klasse nicht freigeschaltet. Frag deine Lehrerin / deinen Lehrer.',
+    netz:'Keine Verbindung zum Internet. Prüfe das WLAN und versuche es noch einmal.',
+    server:'Der Server antwortet nicht richtig. Versuche es gleich noch einmal.'};
+  let C=null,login=null,server='',dirty=false,timer=null,sending=null,lastSent='',lastSendAt=0,suppress=false,status='',photoRun=null,photoFail=0;
+  const qs=new URLSearchParams(location.search);
+  const idOk=s=>/^[A-Za-z0-9_-]{20,}$/.test(s||'');
+  const lsGet=k=>{try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}};
+  const lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,JSON.stringify(v));}catch(e){}};
+  const metaKey=()=>'fs-meta-'+C.app;
+  const meta=()=>lsGet(metaKey())||{};
+  const pageLink=()=>location.origin+location.pathname;
+  const photoList=()=>C.photos?C.photos().filter(p=>p.ph):[];
+  const photosPending=()=>photoList().some(p=>p.ph.src&&!p.ph.fid);
+
+  function setStatus(k){status=k;['cloudStatus','cloudStatus2'].forEach(id=>{const e=document.getElementById(id);if(e){e.textContent=TXT[k]||'';e.className='cstat'+(id==='cloudStatus2'?' big ':' ')+k;}});}
+  function idle(){setStatus(dirty?'busy':photosPending()?(status==='off'?'off':'foto'):'ok');}
+  async function call(s,body,keep){
+    const txt=JSON.stringify(body);
+    const r=await fetch('https://script.google.com/macros/s/'+s+'/exec',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:txt,keepalive:!!keep&&txt.length<60000,redirect:'follow'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  }
+  const base=()=>({u:login.u,p:login.p,app:C.app,titel:C.titel,link:pageLink()});
+
+  /* ---- Anmelde-Fenster ---- */
+  function showLogin(s,u,msg){
+    let ov=document.getElementById('fsLogin');if(ov)ov.remove();
+    ov=document.createElement('div');ov.id='fsLogin';ov.className='fs-ov';
+    ov.innerHTML=`<form class="fs-box" autocomplete="on"><h2>👋 Anmelden</h2>
+      <div class="fs-sub">${C.titel}</div>
+      <label for="fsU">Benutzername <span class="fs-sub">(user name)</span></label>
+      <input id="fsU" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" placeholder="z. B. 8b-07">
+      <label for="fsP">PIN <span class="fs-sub">(secret number)</span></label>
+      <input id="fsP" type="password" inputmode="numeric" autocomplete="current-password" placeholder="••••">
+      <button class="go" type="submit">Los geht's ▶</button><div class="fs-msg" id="fsMsg"></div></form>`;
+    document.body.appendChild(ov);
+    const uI=ov.querySelector('#fsU'),pI=ov.querySelector('#fsP'),m=ov.querySelector('#fsMsg'),b=ov.querySelector('.go');
+    const say=(cls,t)=>{m.className='fs-msg '+cls;m.textContent=t;};
+    if(u)uI.value=u;if(msg)say('bad',msg);
+    setTimeout(()=>(u?pI:uI).focus(),50);
+    ov.querySelector('form').onsubmit=async e=>{e.preventDefault();
+      const cu=uI.value.trim().toLowerCase(),cp=pI.value.trim();
+      if(!cu||!cp){say('bad','Bitte Benutzername und PIN eingeben.');return;}
+      b.disabled=true;say('info','⏳ Einen Moment …');
+      try{const r=await call(s,{action:'login',u:cu,p:cp,app:C.app,titel:C.titel,link:pageLink()});
+        if(!r.ok){say('bad',ERR[r.err]||ERR.server);b.disabled=false;pI.value='';pI.focus();return;}
+        login={u:cu,p:cp,s,name:r.name||'',voll:r.voll||r.name||'',klasse:r.klasse||''};lsSet(LOGIN_KEY,login);
+        ov.remove();applyServer(r.data);C.onLogin(login);
+      }catch(err){say('bad',ERR.netz);b.disabled=false;}
+    };
+  }
+
+  /* ---- Abgleich Gerät ↔ Server: der neuere Stand gewinnt ---- */
+  function applyServer(d){
+    const m=meta();
+    let localT=m.t||0;
+    if(m.owner&&m.owner!==login.u){suppress=true;C.setState(null);suppress=false;localT=0;}  // Stand eines anderen Kindes vom Gerät entfernen
+    const serverT=(d&&d.state)?(d.t||0):-1;
+    if(serverT>localT||(serverT>=0&&serverT===localT&&!hasLocal())){
+      suppress=true;C.setState(d.state);suppress=false;
+      lsSet(metaKey(),{owner:login.u,t:serverT});lastSent=JSON.stringify(C.getState());dirty=false;
+    }else if(serverT>=0&&serverT===localT){
+      lsSet(metaKey(),{owner:login.u,t:localT});lastSent=JSON.stringify(C.getState());dirty=false;   // schon gleich
+    }else{
+      lsSet(metaKey(),{owner:login.u,t:localT});
+      if(localT>0||(!m.owner&&hasLocal())){dirty=true;send();}
+    }
+    idle();syncPhotos();
+  }
+  const hasLocal=()=>C.hasProgress?!!C.hasProgress():true;
+
+  function changed(){
+    if(suppress||!login)return;
+    syncPhotos();
+    const js=JSON.stringify(C.getState());if(js===lastSent)return;
+    lsSet(metaKey(),{owner:login.u,t:Date.now()});dirty=true;
+    if(status!=='off')setStatus('busy');schedule();
+  }
+  function schedule(){if(timer)return;const wait=Math.max(3000,8000-(Date.now()-lastSendAt));timer=setTimeout(()=>{timer=null;send();},wait);}
+  function send(keep){
+    if(!login||!dirty)return Promise.resolve(true);
+    if(sending)return sending;
+    const st=C.getState(),js=JSON.stringify(st);
+    if(js===lastSent){dirty=false;idle();return Promise.resolve(true);}
+    setStatus('busy');
+    sending=call(login.s,Object.assign(base(),{action:'save',t:meta().t||Date.now(),state:st,sum:C.getSummary()}),keep)
+      .then(r=>{if(r.ok){lastSent=js;dirty=JSON.stringify(C.getState())!==js;idle();return !dirty;}
+        if(r.err==='login'||r.err==='klasse'||r.err==='gesperrt'){forceLogout(ERR[r.err]);return false;}
+        setStatus('off');return false;})
+      .catch(()=>{setStatus('off');return false;})
+      .finally(()=>{sending=null;lastSendAt=Date.now();if(dirty&&login)schedule();});
+    return sending;
+  }
+
+  /* ---- Fotos: hochladen (Google Drive) und auf neuem Gerät wieder holen ---- */
+  function syncPhotos(){
+    if(!login||!C.photos||photoRun)return photoRun||Promise.resolve();
+    photoRun=(async()=>{
+      for(let loop=0;loop<20;loop++){
+        const up=photoList().find(p=>p.ph.src&&!p.ph.fid);
+        const down=photoList().find(p=>p.ph.fid&&!p.ph.src&&!p.ph.missing);
+        const job=up||down;if(!job||!login)break;
+        const ph=job.ph,src=ph.src;
+        if(up)setStatus('foto');
+        try{
+          const r=await call(login.s,Object.assign(base(),up?{action:'photo',key:job.key,data:src,sum:C.getSummary()}:{action:'photoGet',id:ph.fid}));
+          if(!r.ok){
+            if(r.err==='login'||r.err==='klasse'||r.err==='gesperrt'){forceLogout(ERR[r.err]);break;}
+            if(down)ph.missing=true;   // Foto nicht mehr auf dem Server
+            else{photoFail++;setStatus('off');break;}
+          }else if(up){if(ph.src===src){ph.fid=r.id;photoFail=0;}}
+          else ph.src=r.data;
+          C.onPhotos&&C.onPhotos();
+          if(up)changed();
+        }catch(e){photoFail++;setStatus('off');break;}
+      }
+    })().finally(()=>{photoRun=null;if(status!=='off')idle();});
+    return photoRun;
+  }
+
+  function flush(){if(dirty&&login){clearTimeout(timer);timer=null;send(true);}}
+  function forceLogout(msg){const s=login.s,u=login.u;login=null;lsSet(LOGIN_KEY,null);setStatus('');showLogin(s,u,msg);}
+
+  return {
+    init(opts){C=opts;
+      window.addEventListener('online',()=>{if(dirty)send();syncPhotos();});
+      document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flush();});
+      window.addEventListener('pagehide',flush);
+      setInterval(()=>{if(dirty&&!sending)send();if(photosPending())syncPhotos();},30000);
+      const sP=qs.get('s'),uP=(qs.get('u')||'').trim().toLowerCase();
+      login=lsGet(LOGIN_KEY);
+      const s=idOk(sP)?sP:(login&&idOk(login.s)?login.s:(idOk(STANDARD_ID)?STANDARD_ID:''));
+      if(!s){login=null;setStatus('lokal');return;}
+      server=s;
+      if(login&&(login.s!==s||(uP&&uP!==login.u))){login=null;lsSet(LOGIN_KEY,null);}
+      if(!login){showLogin(s,uP);return;}
+      C.onLogin(login);setStatus('busy');
+      call(s,Object.assign(base(),{action:'load'}))
+        .then(r=>{if(r.ok)applyServer(r.data);else if(r.err==='login'||r.err==='klasse'||r.err==='gesperrt')forceLogout(ERR[r.err]);else setStatus('off');})
+        .catch(()=>{setStatus('off');});
+    },
+    changed,
+    async now(){if(!login)return false;if(dirty||lastSent==='')dirty=true;await send();await syncPhotos();return !dirty&&!photosPending();},
+    active:()=>!!login,
+    configured:()=>!!server,
+    user:()=>login,
+    /* Abmelden. Liefert false, wenn noch nicht alles gespeichert ist (dann force=true zum Erzwingen). */
+    async logout(force){
+      if(!login)return true;
+      if(dirty||photosPending()){await send();await syncPhotos();if((dirty||photosPending())&&!force)return false;}
+      const s=login.s;login=null;lsSet(LOGIN_KEY,null);lsSet(metaKey(),null);lastSent='';dirty=false;setStatus('');
+      suppress=true;C.setState(null);suppress=false;showLogin(s,'');return true;
+    }
+  };
+})();
+
 const {fmt,parseNum,EXP}=HB;
 const KEY='hebel_experiment_v1';
 const $=id=>document.getElementById(id);
@@ -764,12 +953,13 @@ function zoom(src){const o=el('div','overlay',`<img src="${src}">`);o.onclick=()
 function photoBlock(getObj,onChange){ // getObj(): Objekt mit .photo
   const box=el('div','photo');
   function draw(){const ph=getObj().photo;box.innerHTML='';
-    if(ph){const im=el('img');im.src=ph.src;im.onclick=()=>zoom(ph.src);box.appendChild(im);box.appendChild(el('span','pt','✅ Foto vom '+HB.deDate(ph.t)));}
+    if(ph&&ph.src){const im=el('img');im.src=ph.src;im.onclick=()=>zoom(ph.src);box.appendChild(im);box.appendChild(el('span','pt','✅ Foto vom '+HB.deDate(ph.t)+(Cloud.active()?(ph.fid?' · ☁️ gespeichert':' · ⏳ wird hochgeladen'):'')));}
+    else if(ph){box.appendChild(el('div','phwait',ph.missing?'⚠️ Foto nicht mehr online':ph.fid?'⏳ Foto wird geladen …':'📱 Foto ist auf einem anderen iPad (noch nicht hochgeladen)'));box.appendChild(el('span','pt','✅ Foto vom '+HB.deDate(ph.t)));}
     const b=el('button','btn '+(ph?'sec':'yellow'),ph?'📷 Neues Foto':'📷 Foto machen');
     b.onclick=async()=>{try{const r=await takePhoto();if(!r)return;getObj().photo=r;save();draw();onChange&&onChange();}
       catch(e){toast('❌ '+e.message,5000);}};
     box.appendChild(b);}
-  draw();return box;
+  draw();box._draw=draw;box.classList.add('phbox');return box;
 }
 function esc(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
@@ -779,7 +969,10 @@ function fresh(){return {app:'hebel-exp',created:new Date().toISOString(),name:'
 let state;
 try{state=JSON.parse(localStorage.getItem(KEY));}catch(e){}
 if(!state||state.app!=='hebel-exp')state=fresh();
-function save(){state.updated=new Date().toISOString();try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){toast('⚠️ Der Speicher ist voll. Klicke jetzt auf „💾 Speichern“, damit nichts verloren geht!',7000);}updateHeader();}
+function persistLocal(){try{localStorage.setItem(KEY,JSON.stringify(state));return true;}catch(e){return false;}}
+function save(){state.updated=new Date().toISOString();
+  if(!persistLocal()&&!Cloud.active())toast('⚠️ Der Speicher ist voll. Klicke jetzt auf „💾 Speichern“, damit nichts verloren geht!',7000);
+  updateHeader();Cloud.changed();}
 
 /* ---------- Navigation ---------- */
 const PAGES=[['p0','Start'],['p1','1 Vorbereitung'],['p2','2 Theorie'],['p3','A'],['p4','B'],['p5','C'],['p6','D'],['p7','Auswertung'],['p8','📤 Abgabe']];
@@ -1041,10 +1234,70 @@ let resetArm=false;
 $('resetBtn').onclick=()=>{if(!resetArm){resetArm=true;$('resetBtn').textContent='⚠️ Wirklich alles löschen? Nochmal klicken!';setTimeout(()=>{resetArm=false;$('resetBtn').textContent='🔄 Alles löschen und neu beginnen';},4000);return;}
   try{localStorage.removeItem(KEY);}catch(e){}location.reload();};
 
+/* ---------- Online speichern: Anbindung ---------- */
+const APP_ID='hebel-exp';
+function serverState(){   // ohne Bilddaten (die liegen in Google Drive) und ohne Navigation
+  return JSON.parse(JSON.stringify(state,(k,v)=>(k==='src'||k==='page'||k==='updated'||k==='missing')?undefined:v));}
+let reloadSoon=false;
+function cloudSummary(){
+  const s=state,p=s.prep||{},q=id=>(s.q&&s.q[id])||{},T={};
+  const add=(id,label,title,items,err)=>{const d=items.filter(Boolean).length;T[id]=[d,items.length,err||0,d,items.length,label,title];};
+  add('prep','Vorb.','Vorbereitung: Kraft F, Lochabstand d, waagerecht',[!!p.Fok,parseNum(p.d)>0,!!p.level],p.Fwrong);
+  add('th','Theorie','Theorie-Fragen th1, th2',[!!q('th1').done,!!q('th2').done],(q('th1').wrong||0)+(q('th2').wrong||0));
+  EXP.rows.forEach(r=>{const x=s.rows[r.id]||{},t=HB.setupText(r);
+    add(r.id,r.id,t.left+' | '+t.right+' — Vorhersage, Foto, Messung'+(x.revealed?' (Lösung angezeigt)':''),[!!(x.ok||x.revealed),!!x.photo,!isNaN(parseNum(x.meas))],x.wrong);});
+  const D=s.D||{};
+  add('D','D','Versuch D: Vermutung, Foto, F senkrecht, F schräg, Erklärung',[D.guess!==null&&D.guess!==undefined,!!D.photo,!isNaN(parseNum(D.Fs)),!isNaN(parseNum(D.Fa)),!!q('dex').done],q('dex').wrong);
+  add('ausw','Auswertung','Gründe, Text 1, Text 2, Merksatz',[!!(s.reasons&&s.reasons.done),(s.texts.t1||'').trim().length>10,(s.texts.t2||'').trim().length>10,!!(s.cloze&&s.cloze.done)],((s.reasons&&s.reasons.wrong)||0)+((s.cloze&&s.cloze.wrong)||0));
+  const pr=HB.expProgress(s),w=HB.expWrong(s),ids=Object.keys(T);
+  return {stars:pr.done,max:pr.total,err:w.total,done:ids.filter(i=>T[i][3]>=T[i][4]).length,n:ids.length,tasks:T,
+    labels:{sterne:'✅ Schritte',max:'von',fehler:'❌ Fehlversuche',erledigt:'Teile fertig'},
+    fotos:HB.expPhotos(s).map(x=>x.id),
+    extra:{partner:['Partner',s.partner],t1:['Text 1: größte Abweichung',s.texts.t1],t2:['Text 2: genauer machen',s.texts.t2],
+      obs:['Beobachtungen A/B/C',['A','B','C'].filter(k=>(s.obs[k]||'').trim()).map(k=>k+': '+s.obs[k].trim()).join(' | ')]}};
+}
+function showCloudUi(){
+  const on=Cloud.active(),cfg=Cloud.configured();
+  $('cloudInfo').classList.toggle('hidden',!cfg);$('fileInfo').classList.toggle('hidden',cfg);
+  $('hLoad').classList.toggle('hidden',cfg);$('hOut').classList.toggle('hidden',!on);
+  document.querySelectorAll('.fileOnly').forEach(e=>e.classList.toggle('hidden',cfg));
+  document.querySelectorAll('.cloudOnly').forEach(e=>e.classList.toggle('hidden',!cfg));
+  $('resetBtn').parentElement.classList.toggle('hidden',cfg);
+  $('inName').readOnly=$('inKlasse').readOnly=on;
+}
+$('hSave').onclick=async()=>{
+  if(!Cloud.active()){saveEnc();return;}
+  toast('⏳ Speichert …',1500);
+  toast((await Cloud.now())?'☁️ Alles ist online gespeichert.':'⚠️ Noch nicht alles gespeichert (kein Internet?). Es wird später automatisch gespeichert.',4500);};
+let outArm=false;
+$('hOut').onclick=async()=>{
+  const ok=await Cloud.logout(outArm);
+  if(!ok){outArm=true;toast('⚠️ Noch nicht alles gespeichert (kein Internet?). Warte kurz – oder klicke noch einmal auf „Abmelden“. Dann geht Ungespeichertes verloren.',7000);setTimeout(()=>outArm=false,8000);}
+};
+
 /* ---------- Start ---------- */
 initPrep();initTheory();EXP.groups.forEach(buildGroup);initD();initReasons();initTexts();initCloze();
 $('pd').addEventListener('input',refreshAllRows);$('pFchk').addEventListener('click',refreshAllRows);
 refreshAllRows();updateHeader();go(state.page||'p0');
+Cloud.init({
+  app:APP_ID,
+  titel:'Experiment: Das Hebelgesetz',
+  getState:serverState,
+  hasProgress:()=>HB.expProgress(state).done>0||!!state.name.trim(),
+  setState:st=>{   // neuer Stand vom Server (oder null = leeren): Bilder behalten, die schon auf dem Gerät sind
+    const old={};HB.expPhotos(state).forEach(p=>{if(p.photo&&p.photo.fid&&p.photo.src)old[p.photo.fid]=p.photo.src;});
+    state=st?Object.assign(fresh(),st,{page:state.page}):fresh();
+    HB.expPhotos(state).forEach(p=>{if(p.photo&&p.photo.fid&&old[p.photo.fid])p.photo.src=old[p.photo.fid];});
+    persistLocal();
+    if(!reloadSoon){reloadSoon=true;setTimeout(()=>location.reload(),50);}   // Seite mit neuem Stand neu aufbauen
+  },
+  getSummary:cloudSummary,
+  photos:()=>HB.expPhotos(state).map(p=>({key:p.id,ph:p.photo})),
+  onPhotos:()=>{persistLocal();document.querySelectorAll('.phbox').forEach(b=>b._draw&&b._draw());},
+  onLogin:info=>{if(info.voll)state.name=info.voll;if(info.klasse)state.klasse=info.klasse;persistLocal();
+    $('inName').value=state.name;$('inKlasse').value=state.klasse;showCloudUi();updateHeader();setTimeout(()=>Cloud.changed(),0);}
+});
+showCloudUi();
 </script>
 </body>
 </html>
