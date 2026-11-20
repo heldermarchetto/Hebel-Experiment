@@ -90,6 +90,29 @@ td.good{background:#dcfce7}td.mid{background:#ffedd5}td.bad{background:#fee2e2}
 .fs-msg.bad{display:block;background:#fee2e2;color:#9b1c1c}
 .fs-msg.info{display:block;background:#eef2ff;color:#3730a3}
 .phwait{display:inline-block;width:160px;height:110px;border-radius:8px;border:2px dashed #86efac;background:#f0fdf4;color:var(--muted);font-size:14px;display:flex;align-items:center;justify-content:center;text-align:center;padding:6px}
+/* 🇬🇧 DFU-Hilfe */
+.dfu{text-decoration:underline dotted #2563eb 2px;text-underline-offset:3px;cursor:help;-webkit-tap-highlight-color:rgba(37,99,235,.15)}
+body.dfu-off .dfu{text-decoration:none;cursor:inherit}
+.dfu-demo{text-decoration:underline dotted #2563eb 2px;text-underline-offset:3px}
+.dfu-pop{position:fixed;z-index:260;background:#1e293b;color:#fff;border-radius:12px;padding:10px 14px;max-width:min(360px,92vw);font-size:17px;line-height:1.4;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.dfu-pop .dp-pl{color:#cbd5e1;font-size:15px}.dfu-pop .dp-en{font-size:18px;margin-top:2px}.dfu-pop .dp-x{font-size:15px;color:#e2e8f0;margin-top:4px}
+.dfu-pop .dp-row{display:flex;gap:6px;margin-top:8px}.dfu-pop button{background:#334155;color:#fff;border:0;border-radius:8px;padding:5px 10px;font-size:14.5px;cursor:pointer}
+.dfu-pop .ar-der{color:#93c5fd}.dfu-pop .ar-die{color:#fca5a5}.dfu-pop .ar-das{color:#86efac}
+.ar-der{color:#1d4ed8;font-weight:700}.ar-die{color:#b91c1c;font-weight:700}.ar-das{color:#15803d;font-weight:700}
+.w-leg{font-size:16px}.w-note{font-size:15px;color:var(--muted)}.w-stat{margin:4px 0 10px}
+.w-prog{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0}
+.w-bar{flex:1 1 200px;height:12px;background:#e5e9f2;border-radius:8px;overflow:hidden;margin:6px 0}.w-bar i{display:block;height:100%;background:var(--ok)}
+.w-chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.wchip{border:2px solid var(--line);background:#fff;border-radius:20px;padding:5px 12px;font-size:15px;font-weight:600;cursor:pointer;color:var(--ink)}
+.wchip.on{background:var(--accent2);border-color:var(--accent2);color:#fff}
+.wlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px}
+.witem{display:grid;grid-template-columns:40px 1fr 26px;grid-template-rows:auto auto;column-gap:8px;align-items:center;border:2px solid var(--line);border-radius:10px;padding:6px 10px;background:#fff}
+.witem.ok{border-color:#86efac;background:#f0fdf4}
+.witem .wsay{grid-row:1/3;border:0;background:#eef4ff;border-radius:8px;font-size:18px;height:36px;cursor:pointer}
+.witem .wde{font-size:17px}.witem .wpl{color:var(--muted);font-size:14px;margin-left:6px}.witem .wx{display:block;color:var(--muted);font-size:14px}
+.witem .wen{grid-column:2;color:var(--muted);font-style:italic;font-size:15.5px}.witem .wmk{grid-column:3;grid-row:1/3;text-align:center}
+.tcard .tq{font-size:19px;margin:12px 0}.tq-big{font-size:26px;font-weight:700;margin:6px 0}.tq-en{font-style:italic;color:#1e40af}
+.tops .opt{min-width:150px}
 </style>
 </head>
 <body>
@@ -100,6 +123,7 @@ td.good{background:#dcfce7}td.mid{background:#ffedd5}td.bad{background:#fee2e2}
     <span class="chip prog" id="hProg">0 %</span>
     <span class="chip wr" id="hWrong">❌ 0</span>
     <span class="cstat" id="cloudStatus"></span>
+    <button class="hbtn" id="hDfu">🇬🇧 Hilfe: an</button>
     <button class="hbtn" id="hSave">💾 Speichern</button>
     <button class="hbtn" id="hLoad">📂 Laden</button>
     <button class="hbtn hidden" id="hOut">🚪 Abmelden</button>
@@ -260,6 +284,12 @@ td.good{background:#dcfce7}td.mid{background:#ffedd5}td.bad{background:#fee2e2}
   </div>
   <div class="card" style="text-align:center"><button class="btn sec" id="resetBtn">🔄 Alles löschen und neu beginnen</button></div>
   <div class="next"><button class="btn sec" data-go="p7">← Zurück</button><span></span></div>
+</section>
+
+<!-- 📖 WÖRTER (DFU-Hilfe) -->
+<section class="page nodfu" id="pW">
+  <h2>📖 Wörter lernen</h2>
+  <div id="wBox"></div>
 </section>
 </main>
 
@@ -975,7 +1005,7 @@ function save(){state.updated=new Date().toISOString();
   updateHeader();Cloud.changed();}
 
 /* ---------- Navigation ---------- */
-const PAGES=[['p0','Start'],['p1','1 Vorbereitung'],['p2','2 Theorie'],['p3','A'],['p4','B'],['p5','C'],['p6','D'],['p7','Auswertung'],['p8','📤 Abgabe']];
+const PAGES=[['p0','Start'],['p1','1 Vorbereitung'],['p2','2 Theorie'],['p3','A'],['p4','B'],['p5','C'],['p6','D'],['p7','Auswertung'],['p8','📤 Abgabe'],['pW','📖 Wörter']];
 function pageDone(id){
   const s=state,p=s.prep,rowsDone=g=>EXP.groups.find(x=>x.key===g).rows.every(r=>{const x=s.rows[r.id]||{};return (x.ok||x.revealed)&&!!x.photo&&!isNaN(parseNum(x.meas));});
   switch(id){
@@ -984,12 +1014,13 @@ function pageDone(id){
     case 'p2':return ['th1','th2'].every(i=>s.q[i]&&s.q[i].done);
     case 'p3':return rowsDone('A');case 'p4':return rowsDone('B');case 'p5':return rowsDone('C');
     case 'p6':return !!(s.q.dex&&s.q.dex.done)&&!!s.D.photo;
+    case 'pW':return !!(window.DFU&&DFU.done());
     case 'p7':return s.reasons.done&&s.cloze.done&&s.texts.t1.trim().length>10&&s.texts.t2.trim().length>10;
   }return false;
 }
 function renderNav(){const n=$('nav');n.innerHTML='';PAGES.forEach(([id,l])=>{const b=el('button','tab'+(state.page===id?' active':'')+(pageDone(id)?' done':''),l);b.onclick=()=>go(id);n.appendChild(b);});}
 function go(id){state.page=id;save();document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));renderNav();
-  if(id==='p7')renderSummary();if(id==='p8')renderFinal();window.scrollTo(0,0);}
+  if(id==='p7')renderSummary();if(id==='p8')renderFinal();if(id==='pW'&&window.DFU)DFU.render();window.scrollTo(0,0);}
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
 function updateHeader(){const p=HB.expProgress(state),w=HB.expWrong(state);$('hProg').textContent='✅ '+p.pct+' %';$('hWrong').textContent='❌ '+w.total+' Fehlversuche';renderNav();}
 
@@ -1012,7 +1043,7 @@ $('hSave').onclick=saveEnc;$('saveBtn2').onclick=saveEnc;$('hLoad').onclick=load
 [['inName','name'],['inKlasse','klasse'],['inPartner','partner'],['inDatum','datum']].forEach(([i,k])=>{$(i).value=state[k]||'';$(i).oninput=e=>{state[k]=e.target.value;save();};});
 
 /* ---------- Vorbereitung ---------- */
-function predsStarted(){return Object.values(state.rows).some(x=>x.ok||x.revealed||x.wrong>0);}
+function predsStarted(){return Object.values(state.rows).some(x=>x.ok||x.revealed||x.wrong>(x.w0||0));}   // w0 = Fehlversuche vor dem Zurücksetzen
 function initPrep(){
   const p=state.prep;$('pm').value=p.m;$('pF').value=p.F;$('pd').value=p.d;
   $('pm').oninput=e=>{p.m=e.target.value;if(p.Fok){p.Fok=false;p.Fval=null;$('pFfb').textContent='';}save();};
@@ -1033,7 +1064,22 @@ function initPrep(){
 }
 function markLevel(){document.querySelectorAll('#levelOpts .opt').forEach(b=>b.classList.toggle('sel',b.dataset.v===state.prep.level));}
 function lockPrep(){const l=predsStarted()&&state.prep.Fok;['pm','pF','pd'].forEach(i=>$(i).disabled=l);$('pFchk').disabled=l||state.prep.Fok;
-  $('prepLock').innerHTML=l?'<div class="note">🔒 Diese Werte sind jetzt fest, weil du schon Vorhersagen gemacht hast.</div>':'';}
+  $('prepLock').innerHTML=l?'<div class="note">🔒 Diese Werte sind jetzt fest, weil du schon Vorhersagen gemacht hast.<br><button class="btn sec" id="prepReset" style="margin-top:8px">🔓 Werte ändern</button></div>':'';
+  if(l)$('prepReset').onclick=prepReset;}
+/* Vorbereitung zurücksetzen: Masse, F und Lochabstand löschen. Die Vorhersagen A–C müssen neu gerechnet werden.
+   Fotos, Messwerte, Beobachtungen und Fehlversuche bleiben. */
+let prepArm=false;
+function prepReset(){
+  const b=$('prepReset');
+  if(!prepArm){prepArm=true;b.className='btn';b.style.background='var(--bad)';
+    b.textContent='⚠️ Sicher? Masse, F und Lochabstand werden gelöscht. Die Vorhersagen A–C musst du neu rechnen. Fotos und Messwerte bleiben. → Nochmal klicken!';
+    setTimeout(()=>{prepArm=false;if(document.body.contains(b)){b.className='btn sec';b.style.background='';b.textContent='🔓 Werte ändern';}},6000);return;}
+  const p=state.prep;Object.assign(p,{m:'',F:'',Fok:false,Fval:null,d:'',resets:(p.resets||0)+1});
+  Object.values(state.rows).forEach(x=>{x.pred='';x.ok=false;x.revealed=false;x.w0=x.wrong||0;});
+  state.page='p1';save();
+  const go2=()=>location.reload();
+  if(Cloud.active()){toast('⏳ Speichert …',3000);Promise.race([Cloud.now(),new Promise(r=>setTimeout(r,4000))]).then(go2);}else go2();
+}
 function ready(){return state.prep.Fok&&parseNum(state.prep.d)>0;}
 
 /* ---------- Multiple Choice ---------- */
@@ -1218,7 +1264,7 @@ function initCloze(){
 /* ---------- Abgabe ---------- */
 function renderFinal(){
   const p=HB.expProgress(state),w=HB.expWrong(state);
-  const miss=PAGES.filter(([id])=>id!=='p8'&&!pageDone(id)).map(([id,l])=>`<li><a href="#" data-p="${id}">${l}</a></li>`).join('');
+  const miss=PAGES.filter(([id])=>id!=='p8'&&id!=='pW'&&!pageDone(id)).map(([id,l])=>`<li><a href="#" data-p="${id}">${l}</a></li>`).join('');
   $('finalBox').innerHTML=`<h3>${esc(state.name)||'⚠️ Kein Name!'} ${state.klasse?'('+esc(state.klasse)+')':''}</h3>
     <p>Bearbeitet: <b>${p.pct} %</b> &nbsp;·&nbsp; Fehlversuche: <b>${w.total}</b></p>
     ${miss?`<div class="warn">Noch nicht fertig:<ul class="missing">${miss}</ul>Du kannst trotzdem ein PDF erstellen.</div>`:'<div class="note">🎉 Alles fertig! Erstelle jetzt dein PDF.</div>'}
@@ -1254,7 +1300,9 @@ function cloudSummary(){
     labels:{sterne:'✅ Schritte',max:'von',fehler:'❌ Fehlversuche',erledigt:'Teile fertig'},
     fotos:HB.expPhotos(s).map(x=>x.id),
     extra:{partner:['Partner',s.partner],t1:['Text 1: größte Abweichung',s.texts.t1],t2:['Text 2: genauer machen',s.texts.t2],
-      obs:['Beobachtungen A/B/C',['A','B','C'].filter(k=>(s.obs[k]||'').trim()).map(k=>k+': '+s.obs[k].trim()).join(' | ')]}};
+      obs:['Beobachtungen A/B/C',['A','B','C'].filter(k=>(s.obs[k]||'').trim()).map(k=>k+': '+s.obs[k].trim()).join(' | ')],
+      reset:['Vorbereitung neu gestartet',(s.prep&&s.prep.resets)?s.prep.resets+'×':''],
+      dfu:['DFU-Wörter',window.DFU?DFU.summary():'']}};
 }
 function showCloudUi(){
   const on=Cloud.active(),cfg=Cloud.configured();
@@ -1298,6 +1346,239 @@ Cloud.init({
     $('inName').value=state.name;$('inKlasse').value=state.klasse;showCloudUi();updateHeader();setTimeout(()=>Cloud.changed(),0);}
 });
 showCloudUi();
+</script>
+<script>
+/* ================= 🇬🇧 DFU-Hilfe (Sprachhilfe) =================
+   - Wichtige Wörter auf der Seite sind unterstrichen. Antippen → Übersetzung + 🔊
+   - Seite „📖 Wörter“: Wortliste und Wörter-Test
+   - Die Daten stehen in state.dfu. Sterne / Fortschritt des Experiments ändern sich NICHT.
+   ================================================================ */
+window.DFU=(function(){
+  /* [id, Wort, Artikel, Plural, Englisch, Kategorie, Formen auf der Seite, Erklärung (Operatoren)] */
+  const W=[
+    ['hebel','Hebel','der','die Hebel','lever','h','Hebel|Hebels|Hebeln'],
+    ['drehpunkt','Drehpunkt','der','die Drehpunkte','pivot','h','Drehpunkt|Drehpunkts|Drehpunktes|Drehpunkte'],
+    ['gleichgewicht','Gleichgewicht','das','','balance, equilibrium','h','Gleichgewicht|Gleichgewichts'],
+    ['drehmoment','Drehmoment','das','die Drehmomente','torque, turning moment','h','Drehmoment|Drehmoments|Drehmomentes|Drehmomente'],
+    ['kraft','Kraft','die','die Kräfte','force','h','Kraft|Kräfte|Kräften'],
+    ['gewichtskraft','Gewichtskraft','die','','weight (force of gravity)','h','Gewichtskraft'],
+    ['gewicht','Gewicht','das','die Gewichte','weight','h','Gewicht|Gewichts|Gewichte|Gewichten'],
+    ['masse','Masse','die','','mass','h','Masse'],
+    ['massestueck','Massestück','das','die Massestücke','slotted mass','h','Massestück|Massestücks|Massestücke|Massestücken'],
+    ['hebelarm','Hebelarm','der','die Hebelarme','lever arm','h','Hebelarm|Hebelarms|Hebelarme'],
+    ['abstand','Abstand','der','die Abstände','distance','h','Abstand|Abstands|Abstände|Abständen'],
+    ['loch','Loch','das','die Löcher','hole','h','Loch|Lochs|Löcher|Löchern'],
+    ['lochabstand','Lochabstand','der','','distance between two holes','h','Lochabstand'],
+    ['ziehen','ziehen','','','to pull','h','ziehen|ziehst|zieht|ziehe|gezogen'],
+    ['haengen','hängen','','','to hang','h','hängen|hängt|hängst|hänge|gehängt'],
+    ['drehen','drehen','','','to turn, to rotate','h','drehen|dreht|gedreht'],
+    ['doppelt','doppelt','','','double, twice as much','h','doppelt|doppelte|doppelten'],
+    ['halb','halb','','','half','h','halb|halbe|halben'],
+    ['wirksam','wirksam','','','effective','h','wirksam|wirksame|wirksamer'],
+    ['senkrecht','senkrecht','','','vertical','h','senkrecht|senkrechte|senkrechten'],
+    ['waagerecht','waagerecht','','','horizontal, level','h','waagerecht|waagerechte|waagerechten'],
+    ['schraeg','schräg','','','at an angle, slanted','h','schräg|schräge|schrägen'],
+
+    ['kraftmesser','Kraftmesser','der','die Kraftmesser','spring scale, force meter','m','Kraftmesser|Kraftmessers|Federkraftmesser'],
+    ['stativ','Stativ','das','die Stative','stand (lab stand)','m','Stativ|Stativs'],
+    ['lineal','Lineal','das','die Lineale','ruler','m','Lineal|Lineals'],
+    ['schraube','Schraube','die','die Schrauben','screw','m','Schraube|Schrauben'],
+    ['mutter','Mutter','die','die Muttern','nut (for a screw)','m','Mutter'],
+    ['anzeige','Anzeige','die','die Anzeigen','reading, display (of a device)','m','Anzeige'],
+    ['null','Null','die','','zero (auf Null stellen = to set to zero)','m','Null'],
+    ['messen','messen','','','to measure','m','messen|misst|miss|messt|gemessen'],
+    ['messung','Messung','die','die Messungen','measurement','m','Messung|Messungen'],
+    ['messwert','Messwert','der','die Messwerte','measured value','m','Messwert|Messwerts|Messwerte'],
+    ['ablesen','ablesen','','','to read (a value) off','m','ablesen|abgelesen'],
+    ['einstellen','einstellen','','','to adjust, to set','m','einstellen|eingestellt'],
+    ['genau','genau','','','exact, accurate','m','genau|genaue|genauen|genauer'],
+    ['ungenau','ungenau','','','inaccurate','m','ungenau|ungenaue|ungenauen'],
+    ['reibung','Reibung','die','','friction','m','Reibung'],
+
+    ['versuch','Versuch','der','die Versuche','experiment; attempt','v','Versuch|Versuchs|Versuche|Versuchen'],
+    ['experiment','Experiment','das','die Experimente','experiment','v','Experiment|Experiments|Experimente'],
+    ['aufbau','Aufbau','der','','set-up (of the experiment)','v','Aufbau|Aufbaus'],
+    ['vorbereitung','Vorbereitung','die','','preparation','v','Vorbereitung'],
+    ['vorhersage','Vorhersage','die','die Vorhersagen','prediction','v','Vorhersage|Vorhersagen'],
+    ['erwarten','erwarten','','','to expect','v','erwarten|erwartest|erwarte|erwartet|Erwartung'],
+    ['beobachtung','Beobachtung','die','die Beobachtungen','observation','v','Beobachtung|Beobachtungen'],
+    ['abweichung','Abweichung','die','die Abweichungen','deviation, difference','v','Abweichung|Abweichungen'],
+    ['grund','Grund','der','die Gründe','reason','v','Grund|Gründe|Gründen'],
+    ['auswertung','Auswertung','die','','analysis (of the results)','v','Auswertung'],
+    ['vergleich','Vergleich','der','die Vergleiche','comparison','v','Vergleich'],
+    ['loesung','Lösung','die','die Lösungen','solution','v','Lösung|Lösungen'],
+    ['merksatz','Merksatz','der','die Merksätze','key rule (to remember)','v','Merksatz|Merksätze'],
+    ['protokoll','Protokoll','das','die Protokolle','lab report','v','Protokoll|Protokolls'],
+    ['diagramm','Diagramm','das','die Diagramme','chart, graph','v','Diagramm|Diagramms'],
+    ['abgabe','Abgabe','die','','handing in, submission','v','Abgabe'],
+    ['fehlversuch','Fehlversuch','der','die Fehlversuche','wrong attempt','v','Fehlversuch|Fehlversuche'],
+
+    ['berechnen','berechnen','','','calculate','o','berechnen|berechne|berechnet|rechnen|rechne|rechnest','Mit Formel und Zahlen ein Ergebnis ausrechnen.'],
+    ['beschreiben','beschreiben','','','describe','o','beschreiben|beschreibe','Genau sagen, was man sieht oder was passiert.'],
+    ['erklaeren','erklären','','','explain','o','erklären|erkläre|erklärt','Sagen, warum etwas so ist. (weil …)'],
+    ['vergleichen','vergleichen','','','compare','o','vergleichen|vergleiche|vergleicht','Sagen, was gleich und was verschieden ist.'],
+    ['begruenden','begründen','','','give reasons, justify','o','begründen|begründe','Mit Gründen zeigen, dass etwas richtig ist.'],
+    ['pruefen','prüfen','','','check, test','o','prüfen|prüfe|prüft|geprüft','Kontrollieren, ob etwas richtig ist.'],
+    ['beobachten','beobachten','','','observe','o','beobachten|beobachte|beobachtet','Genau hinschauen und aufschreiben, was passiert.'],
+    ['vermuten','vermuten','','','make a guess, hypothesise','o','vermuten|vermute|Vermutung','Sagen, was man glaubt – vor dem Versuch.'],
+    ['notieren','notieren','','','write down, note','o','notieren|notiere|notiert','Kurz aufschreiben.'],
+    ['waehlen','wählen','','','choose, select','o','wählen|wähle|ausgewählt|auswählen','Die passende Antwort nehmen.']
+  ];
+  const KAT={h:'Hebel und Kraft',m:'Messen und Geräte',v:'Versuch und Auswertung',o:'Arbeitsaufträge (Operatoren)'};
+  const BY={};W.forEach(w=>BY[w[0]]=w);
+  const FORM={};W.forEach(w=>w[6].split('|').forEach(f=>FORM[f.toLowerCase()]=w[0]));
+  const L='A-Za-zÄÖÜäöüß';
+  const alts=Object.keys(FORM).sort((a,b)=>b.length-a.length).map(f=>f.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
+  const RE=new RegExp(`(^|[^${L}])(${alts})(?=$|[^${L}])`,'gi');
+  const SKIP='button,select,option,textarea,input,a,svg,script,style,code,.words,.en,.starter,.nodfu,.dfu,.dfu-pop,.toast,.fs-ov,.overlay';
+  const ON_KEY='dfu-on';
+  const isOn=()=>{try{return localStorage.getItem(ON_KEY)!=='0';}catch(e){return true;}};
+  const nice=w=>(w[2]?w[2]+' ':'')+w[1];
+  const art=w=>w[2]?`<span class="ar-${w[2]}">${w[2]}</span> `:'';
+  const d=()=>{const s=state.dfu||(state.dfu={known:{},seen:{},tests:0,best:0,last:null});s.known=s.known||{};s.seen=s.seen||{};return s;};
+  const sicher=id=>(d().known[id]||0)>=2;
+  const nSicher=()=>W.filter(w=>sicher(w[0])).length;
+
+  /* ---------- Vorlesen ---------- */
+  function speak(t){try{const u=new SpeechSynthesisUtterance(t);u.lang='de-DE';u.rate=0.85;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
+
+  /* ---------- Wörter auf der Seite unterstreichen ---------- */
+  function scan(root){
+    root=root||document.querySelector('main');if(!root)return;
+    const tw=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(n){
+      if(!n.nodeValue||n.nodeValue.trim().length<3)return NodeFilter.FILTER_REJECT;
+      const p=n.parentElement;if(!p||p.closest(SKIP))return NodeFilter.FILTER_REJECT;
+      RE.lastIndex=0;return RE.test(n.nodeValue)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;}});
+    const nodes=[];while(tw.nextNode())nodes.push(tw.currentNode);
+    nodes.forEach(n=>{
+      const t=n.nodeValue,frag=document.createDocumentFragment();let last=0,m;RE.lastIndex=0;
+      while((m=RE.exec(t))){const st=m.index+m[1].length;
+        if(st>last)frag.appendChild(document.createTextNode(t.slice(last,st)));
+        const sp=document.createElement('span');sp.className='dfu';sp.dataset.w=FORM[m[2].toLowerCase()];sp.textContent=m[2];frag.appendChild(sp);
+        last=st+m[2].length;}
+      if(last<t.length)frag.appendChild(document.createTextNode(t.slice(last)));
+      n.parentNode.replaceChild(frag,n);
+    });
+  }
+  let pend=false;
+  function later(){if(pend)return;pend=true;setTimeout(()=>{pend=false;scan();},60);}
+
+  /* ---------- Übersetzung anzeigen ---------- */
+  let pop=null;
+  function closePop(){if(pop){pop.remove();pop=null;}}
+  function showPop(sp){
+    const w=BY[sp.dataset.w];if(!w)return;closePop();
+    pop=document.createElement('div');pop.className='dfu-pop';
+    pop.innerHTML=`<div class="dp-de">${art(w)}<b>${w[1]}</b>${w[3]?` <span class="dp-pl">· Plural: ${w[3]}</span>`:''}</div>
+      <div class="dp-en">🇬🇧 ${w[4]}</div>${w[7]?`<div class="dp-x">${w[7]}</div>`:''}
+      <div class="dp-row"><button class="dp-say" type="button">🔊 Anhören</button><button class="dp-list" type="button">📖 Alle Wörter</button></div>`;
+    document.body.appendChild(pop);
+    pop.querySelector('.dp-say').onclick=e=>{e.stopPropagation();speak(nice(w));};
+    pop.querySelector('.dp-list').onclick=e=>{e.stopPropagation();closePop();go('pW');};
+    const r=sp.getBoundingClientRect(),pw=pop.offsetWidth,ph=pop.offsetHeight;
+    let x=Math.min(Math.max(8,r.left+r.width/2-pw/2),innerWidth-pw-8),y=r.bottom+8;
+    if(y+ph>innerHeight-8)y=Math.max(8,r.top-ph-8);
+    pop.style.left=x+'px';pop.style.top=y+'px';
+    const s=d();s.seen[w[0]]=(s.seen[w[0]]||0)+1;save();
+  }
+  document.addEventListener('click',e=>{
+    const sp=e.target.closest&&e.target.closest('.dfu');
+    if(sp&&isOn()){e.preventDefault();e.stopPropagation();showPop(sp);return;}
+    if(pop&&!pop.contains(e.target))closePop();
+  },true);
+  addEventListener('scroll',closePop,{passive:true});
+
+  /* ---------- Ein/Aus ---------- */
+  function setOn(on){try{localStorage.setItem(ON_KEY,on?'1':'0');}catch(e){}
+    document.body.classList.toggle('dfu-off',!on);const b=document.getElementById('hDfu');
+    if(b){b.textContent=on?'🇬🇧 Hilfe: an':'🇬🇧 Hilfe: aus';b.title=on?'Unterstrichene Wörter antippen → Übersetzung':'Sprachhilfe ist aus';}
+    if(!on)closePop();}
+
+  /* ---------- Seite „Wörter“ ---------- */
+  let kat='',test=null;
+  function render(){
+    const box=document.getElementById('wBox');if(!box)return;
+    if(test){renderTest(box);return;}
+    const s=d(),n=nSicher();
+    let h=`<div class="card"><h3>📖 Wichtige Wörter für das Experiment</h3>
+      <p>Auf allen Seiten sind wichtige Wörter <span class="dfu-demo">unterstrichen</span>. <b>Tippe ein Wort an</b>: Dann siehst du die Übersetzung. <span class="en">(tap an underlined word to see the translation)</span></p>
+      <p class="w-leg">Artikel: <span class="ar-der">der</span> · <span class="ar-die">die</span> · <span class="ar-das">das</span> &nbsp;—&nbsp; Lerne Nomen <b>immer mit Artikel</b>! 🔊 = Anhören</p>
+      <div class="w-prog"><div class="w-bar"><i style="width:${Math.round(n/W.length*100)}%"></i></div>
+        <span><b>${n}</b> von ${W.length} Wörtern sicher ✅</span></div>
+      <p class="w-stat">Wörter-Tests: <b>${s.tests||0}</b>${s.tests?` · bester Test: <b>${s.best||0} / 10</b>`:''}</p>
+      <button class="btn yellow" id="wStart">🎯 Wörter-Test starten (10 Fragen)</button>
+      <p class="w-note">Ein Wort ist <b>sicher ✅</b>, wenn du es 2-mal richtig hattest. Der Test zählt <b>nicht</b> für das Experiment – deine ✅ Schritte bleiben gleich.</p></div>`;
+    h+=`<div class="w-chips"><button class="wchip${kat?'':' on'}" data-k="">Alle</button>${Object.keys(KAT).map(k=>`<button class="wchip${kat===k?' on':''}" data-k="${k}">${KAT[k]}</button>`).join('')}</div>`;
+    Object.keys(KAT).filter(k=>!kat||k===kat).forEach(k=>{
+      h+=`<div class="card"><h3>${KAT[k]}</h3><div class="wlist">`+W.filter(w=>w[5]===k).map(w=>
+        `<div class="witem${sicher(w[0])?' ok':''}"><button class="wsay" data-say="${w[0]}" title="Anhören">🔊</button>
+          <div class="wde">${art(w)}<b>${w[1]}</b>${w[3]?`<span class="wpl">Pl. ${w[3]}</span>`:''}${w[7]?`<span class="wx">${w[7]}</span>`:''}</div>
+          <div class="wen">${w[4]}</div><div class="wmk">${sicher(w[0])?'✅':(s.seen[w[0]]?'👆':'')}</div></div>`).join('')+`</div></div>`;});
+    h+=`<p class="w-note">👆 = Dieses Wort hast du schon angetippt. Es kommt öfter im Test.</p>`;
+    box.innerHTML=h;
+    box.querySelector('#wStart').onclick=start;
+    box.querySelectorAll('.wchip').forEach(b=>b.onclick=()=>{kat=b.dataset.k;render();});
+    box.querySelectorAll('[data-say]').forEach(b=>b.onclick=()=>speak(nice(BY[b.dataset.say])));
+  }
+
+  /* ---------- Wörter-Test ---------- */
+  const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+  function start(){
+    const s=d(),score=w=>(sicher(w[0])?0:10)+(s.seen[w[0]]?5:0)+Math.random()*6;
+    const pick=W.slice().sort((a,b)=>score(b)-score(a)).slice(0,10);
+    test={i:0,ok:0,qs:shuffle(pick).map(makeQ),ans:null,wrong:[]};render();window.scrollTo(0,0);
+  }
+  function others(w,n,f){const typ=x=>!!x[2],pool=[x=>typ(x)===typ(w)&&x[5]===w[5],x=>typ(x)===typ(w)&&x[5]!==w[5],x=>typ(x)!==typ(w)].map(f=>shuffle(W.filter(x=>x!==w&&f(x))));
+    const out=[];for(const x of [].concat(...pool)){if(out.length>=n)break;if(!out.some(y=>f(y)===f(x))&&f(x)!==f(w))out.push(x);}return out;}
+  function makeQ(w){
+    const types=['de-en','en-de'];if(w[2])types.push('art');
+    const t=types[Math.floor(Math.random()*types.length)];
+    if(t==='art')return{w,t,q:`<b>der</b>, <b>die</b> oder <b>das</b>?<div class="tq-big">___ ${w[1]}</div><span class="en">(${w[4]})</span>`,opts:shuffle(['der','die','das']),c:w[2]};
+    if(t==='de-en'){const o=shuffle([w].concat(others(w,3,x=>x[4])));return{w,t,q:`Was bedeutet …<div class="tq-big">${art(w)}${w[1]}</div>`,opts:o.map(x=>x[4]),c:w[4]};}
+    const o=shuffle([w].concat(others(w,3,x=>nice(x))));return{w,t,q:`Wie heißt das auf Deutsch?<div class="tq-big tq-en">${w[4]}</div>`,opts:o.map(x=>nice(x)),c:nice(w)};
+  }
+  function renderTest(box){
+    const T=test;
+    if(T.i>=T.qs.length){
+      const s=d();s.tests=(s.tests||0)+(T.saved?0:1);if(!T.saved){s.best=Math.max(s.best||0,T.ok);s.last={ok:T.ok,n:T.qs.length,t:new Date().toISOString()};T.saved=true;save();}
+      box.innerHTML=`<div class="card tcard"><h3>🎯 Ergebnis</h3><div class="tq-big">${T.ok} von ${T.qs.length} richtig ${T.ok>=9?'🏆':T.ok>=7?'🎉':'💪'}</div>
+        ${T.wrong.length?`<p>Diese Wörter üben wir noch:</p><div class="wlist">${T.wrong.map(w=>`<div class="witem"><button class="wsay" data-say="${w[0]}">🔊</button><div class="wde">${art(w)}<b>${w[1]}</b></div><div class="wen">${w[4]}</div><div></div></div>`).join('')}</div>`:'<p>Super – alles richtig!</p>'}
+        <p class="w-note">✅ Sicher: ${nSicher()} von ${W.length} Wörtern</p>
+        <div class="row"><button class="btn yellow" id="tAgain">🔁 Neuer Test</button><button class="btn sec" id="tBack">📖 Zur Wortliste</button></div></div>`;
+      box.querySelector('#tAgain').onclick=start;box.querySelector('#tBack').onclick=()=>{test=null;render();};
+      box.querySelectorAll('[data-say]').forEach(b=>b.onclick=()=>speak(nice(BY[b.dataset.say])));
+      return;}
+    const Q=T.qs[T.i];
+    box.innerHTML=`<div class="card tcard"><div class="row" style="justify-content:space-between"><b>🎯 Wörter-Test · Frage ${T.i+1} / ${T.qs.length}</b><span>✅ ${T.ok}</span></div>
+      <div class="w-bar"><i style="width:${T.i/T.qs.length*100}%"></i></div>
+      <div class="tq">${Q.q}</div><div class="opts tops">${Q.opts.map((o,k)=>`<button class="opt" data-k="${k}">${o}</button>`).join('')}</div>
+      <div class="fb" id="tFb"></div>
+      <div class="row"><button class="btn sec" id="tStop">✖ Abbrechen</button><button class="btn hidden" id="tNext">Weiter →</button></div></div>`;
+    const btns=[...box.querySelectorAll('.tops .opt')],fb=box.querySelector('#tFb');
+    btns.forEach(b=>b.onclick=()=>{
+      if(T.ans!==null)return;const v=Q.opts[+b.dataset.k],ok=v===Q.c;T.ans=v;
+      const s=d();
+      if(ok){T.ok++;s.known[Q.w[0]]=(s.known[Q.w[0]]||0)+1;b.classList.add('right');fb.className='fb ok';fb.innerHTML='✅ Richtig! '+(sicher(Q.w[0])&&s.known[Q.w[0]]===2?'Jetzt ist das Wort <b>sicher</b>.':'');}
+      else{s.known[Q.w[0]]=0;T.wrong.push(Q.w);b.classList.add('wrong');btns.forEach(x=>{if(Q.opts[+x.dataset.k]===Q.c)x.classList.add('right');});
+        fb.className='fb no';fb.innerHTML=`❌ Richtig ist: <b>${nice(Q.w)}</b> = ${Q.w[4]}`;}
+      btns.forEach(x=>x.disabled=true);save();speak(nice(Q.w));
+      box.querySelector('#tNext').classList.remove('hidden');});
+    box.querySelector('#tNext').onclick=()=>{T.i++;T.ans=null;render();};
+    box.querySelector('#tStop').onclick=()=>{test=null;render();};
+  }
+
+  /* ---------- Start ---------- */
+  function init(){
+    const b=document.getElementById('hDfu');if(b)b.onclick=()=>setOn(!isOn());
+    setOn(isOn());scan();
+    new MutationObserver(later).observe(document.querySelector('main'),{childList:true,subtree:true,characterData:true});
+    if(state.page==='pW')render();
+  }
+  return {init,render,scan,
+    done:()=>(d().best||0)>=8,
+    summary:()=>{const s=d();return `sicher ${nSicher()}/${W.length} · Tests ${s.tests||0}`+(s.tests?` · bester ${s.best||0}/10`:'');}};
+})();
+DFU.init();
 </script>
 </body>
 </html>
